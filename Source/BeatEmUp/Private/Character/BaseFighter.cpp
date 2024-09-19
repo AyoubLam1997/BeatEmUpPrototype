@@ -19,7 +19,7 @@ ABaseFighter::ABaseFighter()
 	//RootComponent = comp;
 	//FighterMesh->SetupAttachment(comp);
 
-	RootComponent = CapsuleMesh;
+	SetRootComponent(CapsuleMesh);
 
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	SkeletalMesh->SetupAttachment(CapsuleMesh);
@@ -45,6 +45,11 @@ void ABaseFighter::BeginPlay()
 	HBHandler = new HitboxHandler();
 	Hitbox = FindComponentByClass<UHitbox>();
 	Hitbox->AssignHitboxHandler(HBHandler);
+
+	MovementPawn = FindComponentByClass<UFloatingPawnMovement>();
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(MovementPawn != nullptr));
 
 	//InitializeController();
 
@@ -77,6 +82,11 @@ void ABaseFighter::Tick(float DeltaTime)
 		}
 	}*/
 
+	//FQuat q = FQuat(FRotator(0, 0, 180));
+
+	//AddActorWorldRotation(q);
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(MovementPawn->IsFalling()));
 	BufferHandler->BufferUpdate();
 	BufferHandler->UpdateMotion(0);
 
@@ -147,15 +157,28 @@ void ABaseFighter::ResetMoveDirection(const FInputActionValue& value)
 
 void ABaseFighter::Walk()
 {
-	FRotator rot = Controller->GetControlRotation();
+	FRotator rot = GetActorRotation();
 
 	FRotator yaw(0.f, rot.Yaw, 0.f);
 
 	FVector forwardDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::X);
+	AddMovementInput(FVector(5, 0, 0), MoveDirection.Y);
+
+	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
+	AddMovementInput(FVector(0, 5, 0), MoveDirection.X);
+	
+	FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
+
+	SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
+
+
+	MovementPawn->IsFalling();
+	/*FVector forwardDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::X);
 	AddMovementInput(forwardDir, MoveDirection.Y);
 
 	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
-	AddMovementInput(rightDir, MoveDirection.X);
+	AddMovementInput(rightDir, MoveDirection.X);*/
+
 }
 
 void ABaseFighter::ChangeState(BaseState* state)
@@ -197,6 +220,11 @@ void ABaseFighter::ChangeToStunState()
 void ABaseFighter::ChangeToStunStateKnock(FVector dir)
 {
 	ChangeState(new KnockbackStunState(dir, 60));
+}
+
+void ABaseFighter::ChangeToStunStateAir(FVector dir)
+{
+	ChangeState(new AirStunState(dir, 60));
 }
 
 HitboxHandler* ABaseFighter::ReturnHitboxHandler()

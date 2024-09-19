@@ -67,6 +67,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeToStunStateKnock(FVector dir);
+	UFUNCTION(BlueprintCallable)
+	void ChangeToStunStateAir(FVector dir);
 
 	//BaseState* GetCurrentState();
 
@@ -97,6 +99,10 @@ public:
 	UAnimSequence* WalkAnim;
 	UPROPERTY(EditAnywhere, Category = "Default animations")
 	UAnimSequence* StunnedAnim;
+	UPROPERTY(EditAnywhere, Category = "Default animations")
+	UAnimSequence* LayingAnim;
+	UPROPERTY(EditAnywhere, Category = "Default animations")
+	UAnimSequence* StandingUpAnim;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")
 	UInputMappingContext* MappingContext;
@@ -107,6 +113,8 @@ public:
 	UGroundedAttackState* LightAttack;
 
 	FVector2D MoveDirection;
+
+	FRotator CurrentRotation;
 
 	UFloatingPawnMovement* MovementPawn;
 

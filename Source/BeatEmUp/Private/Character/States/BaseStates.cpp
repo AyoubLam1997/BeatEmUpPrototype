@@ -46,6 +46,54 @@ void GroundedState::Exit(ABaseFighter& fighter)
 {
 }
 
+void LayingState::Enter(ABaseFighter& fighter)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
+	fighter.SkeletalMesh->PlayAnimation(fighter.LayingAnim, 0);
+
+	m_LayingTimer = 0;
+}
+
+BaseState* LayingState::HandleInput(ABaseFighter& fighter)
+{
+	if (m_LayingTimer >= 60)
+		return new StandingUpState();
+
+	return nullptr;
+}
+
+void LayingState::Update(ABaseFighter& fighter)
+{
+	m_LayingTimer += 1;
+}
+
+void LayingState::Exit(ABaseFighter& fighter)
+{
+}
+
+void StandingUpState::Enter(ABaseFighter& fighter)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
+	fighter.SkeletalMesh->PlayAnimation(fighter.StandingUpAnim, 0);
+}
+
+BaseState* StandingUpState::HandleInput(ABaseFighter& fighter)
+{
+	if (fighter.SkeletalMesh->GetPosition() >= fighter.StandingUpAnim->GetPlayLength())
+		return new GroundedState();
+
+	return nullptr;
+}
+
+void StandingUpState::Update(ABaseFighter& fighter)
+{
+
+}
+
+void StandingUpState::Exit(ABaseFighter& fighter)
+{
+}
+
 void WalkState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering walk state"));
@@ -64,7 +112,6 @@ BaseState* WalkState::HandleInput(ABaseFighter& fighter)
 
 void WalkState::Update(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::SanitizeFloat(fighter.MoveDirection.Length()));
 	fighter.Walk();
 }
 
@@ -144,6 +191,42 @@ void KnockbackStunState::Update(ABaseFighter& fighter)
 }
 
 void KnockbackStunState::Exit(ABaseFighter& fighter)
+{
+	fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector::Zero());
+}
+
+AirStunState::AirStunState(FVector dir, int stun) : KnockbackStunState(dir, stun)
+{
+
+}
+
+void AirStunState::Enter(ABaseFighter& fighter)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air stun state"));
+
+	fighter.SkeletalMesh->PlayAnimation(fighter.FallBlendAnim, 1);
+	FVector BlendParams(0, fighter.GetVelocity().Y, 0);
+	fighter.SkeletalMesh->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
+
+	fighter.CapsuleMesh->AddImpulse(Direction * 5);
+}
+
+BaseState* AirStunState::HandleInput(ABaseFighter& fighter)
+{
+	if (fighter.GetVelocity().Y <= 0 && !fighter.MovementPawn->IsFalling())
+		return new LayingState();
+
+	return nullptr;
+}
+
+void AirStunState::Update(ABaseFighter& fighter)
+{
+	m_CurrentStunTime += 1;
+	FVector BlendParams(0, fighter.GetVelocity().Y, 0);
+	fighter.SkeletalMesh->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
+}
+
+void AirStunState::Exit(ABaseFighter& fighter)
 {
 	fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector::Zero());
 }

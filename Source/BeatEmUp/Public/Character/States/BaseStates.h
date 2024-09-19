@@ -42,34 +42,34 @@ public:
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 };
-//
-//class BEATEMUP_API LayingState : public GroundedState
-//{
-//public:
-//
-//	LayingState();
-//	LayingState(float duration);
-//
-//	virtual void Enter(ABaseFighter& fighter) override;
-//	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
-//	virtual void Update(ABaseFighter& fighter) override;
-//	virtual void Exit(ABaseFighter& fighter) override;
-//
-//private:
-//
-//	float m_LayingTimer;
-//};
-//
-//class BEATEMUP_API StandingUpState : public GroundedState
-//{
-//public:
-//
-//	virtual void Enter(ABaseFighter& fighter) override;
-//	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
-//	virtual void Update(ABaseFighter& fighter) override;
-//	virtual void Exit(ABaseFighter& fighter) override;
-//};
-//
+
+class BEATEMUP_API LayingState : public GroundedState
+{
+public:
+
+	//LayingState();
+	//LayingState(float duration);
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+private:
+
+	float m_LayingTimer;
+};
+
+class BEATEMUP_API StandingUpState : public GroundedState
+{
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+};
+
 class BEATEMUP_API WalkState : public GroundedState
 {
 public:
@@ -207,25 +207,18 @@ public:
 private:
 };
 
-//class BEATEMUP_API AirStunState : public StunState, public AirborneState
-//{
-//public:
-//
-//	float m_VerticalKnockBack;
-//	float m_HorizontalKnockback;
-//
-//	AirStunState();
-//	AirStunState(float velocity, float horizontal);
-//
-//	virtual void Enter(ABaseFighter& fighter) override;
-//	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
-//	virtual void Update(ABaseFighter& fighter) override;
-//	virtual void Exit(ABaseFighter& fighter) override;
-//
-//private:
-//
-//	FVector m_ImpulseDirection;
-//};
+class BEATEMUP_API AirStunState : public KnockbackStunState
+{
+public:
+
+	//AirStunState();
+	AirStunState(FVector dir, int duration);
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+};
 //
 ////class BEATEMUP_API GrabStartupState : public BaseState
 ////{

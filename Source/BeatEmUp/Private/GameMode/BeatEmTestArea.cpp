@@ -23,11 +23,11 @@ void ABeatEmTestArea::BeginPlay()
 
 	Fighter->InitializeController();
 	
-	//Fighter2 = GetWorld()->SpawnActor<ABaseFighter>(FighterToSpawn2, pos2, rot1, SpawnInfo);
+	Fighter2 = GetWorld()->SpawnActor<ABaseFighter>(FighterToSpawn2, pos2, rot1, SpawnInfo);
 	//////GetWorld()->GetPlayerControllerIterator()->Get(1)->Possess(m_P2Fighter);
 	////m_P2Fighter->InitializeController();
 
-	FVector cameraPos = FVector(-640, 0, 1400);
+	FVector cameraPos = FVector(-840, 0, 800);
 
 	FTransform transform(FRotator{ -40.f, 0.f, 0.f }, cameraPos, FVector{ 1.f, 1.f, 1.f });
 	UWorld* poWorld = GetWorld();
