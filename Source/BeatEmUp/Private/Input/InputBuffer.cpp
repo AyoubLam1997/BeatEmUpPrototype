@@ -153,14 +153,8 @@ void InputBuffer::Initialize()
 
 void InputBuffer::BufferUpdate()
 {
-    //GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::FromInt(InputBufferItems.Num()));
     if (m_InputBufferItems.Num() > 0)
     {
-        /* for(int i = 0; i < InputBufferItems.Num(); i++)
-         {
-             InputBufferItems[i]->InputCheck();
-         }*/
-
         for (auto bufferItem : m_InputBufferItems)
         {
             // Checks if one of the buttons is pressed
@@ -171,6 +165,7 @@ void InputBuffer::BufferUpdate()
             //{
             //    // Moves the buffer data higher
             //    bufferItem.SetHoldUsed(i, bufferItem.Buffer[i + 1].HoldTime, bufferItem.Buffer[i + 1].IsUsed);
+            //}
 
             if (bufferItem->m_Buffer.Num() > 1)
             {
@@ -253,6 +248,9 @@ void InputStateItem::HoldUp()
     else
     {
         HoldTime += 1;
+
+        if (HoldTime > 99)
+            HoldTime = 99;
     }
 }
 

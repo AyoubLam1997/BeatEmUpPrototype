@@ -48,9 +48,6 @@ void ABaseFighter::BeginPlay()
 
 	MovementPawn = FindComponentByClass<UFloatingPawnMovement>();
 
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(MovementPawn != nullptr));
-
 	//InitializeController();
 
 	//FighterMesh->OnComponentHit.AddDynamic(this, &ABaseFighter::OnHit);
@@ -74,6 +71,8 @@ void ABaseFighter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(IsGrounded()));
+
 	/*for (int i = 0; i < BufferHandler->m_InputBufferItems.Num(); i++)
 	{
 		if (BufferHandler->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch)
@@ -86,7 +85,6 @@ void ABaseFighter::Tick(float DeltaTime)
 
 	//AddActorWorldRotation(q);
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(MovementPawn->IsFalling()));
 	BufferHandler->BufferUpdate();
 	BufferHandler->UpdateMotion(0);
 
@@ -162,17 +160,18 @@ void ABaseFighter::Walk()
 	FRotator yaw(0.f, rot.Yaw, 0.f);
 
 	FVector forwardDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::X);
-	AddMovementInput(FVector(5, 0, 0), MoveDirection.Y);
+	AddMovementInput(FVector(2, 0, 0), MoveDirection.Y);
 
 	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
-	AddMovementInput(FVector(0, 5, 0), MoveDirection.X);
+	AddMovementInput(FVector(0, 2, 0), MoveDirection.X);
 	
-	FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
+	if (MoveDirection.Length() != 0)
+	{
+		FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
 
-	SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
+		SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
+	}
 
-
-	MovementPawn->IsFalling();
 	/*FVector forwardDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::X);
 	AddMovementInput(forwardDir, MoveDirection.Y);
 
@@ -210,6 +209,37 @@ BaseState* ABaseFighter::ReturnAttackState()
 	}
 
 	return nullptr;
+}
+
+const bool ABaseFighter::IsGrounded()
+{
+	FVector TraceStart = GetActorLocation();
+	FVector TraceEnd = GetActorLocation() + FVector(0, 0, -1.f) * 50.f;
+
+	// You can use FCollisionQueryParams to further configure the query
+	// Here we add ourselves to the ignored list so we won't block the trace
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	FHitResult Hit;
+
+	ECollisionChannel TraceChannelProperty = ECollisionChannel::ECC_Visibility;
+
+	// To run the query, you need a pointer to the current level, which you can get from an Actor with GetWorld()
+	// UWorld()->LineTraceSingleByChannel runs a line trace and returns the first actor hit over the provided collision channel.
+	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
+
+	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+
+	if (Hit.bBlockingHit && IsValid(Hit.GetActor()))
+		return 1;
+
+	return 0;
+}
+
+void ABaseFighter::ChangeToGroundedState()
+{
+	ChangeState(new GroundedState());
 }
 
 void ABaseFighter::ChangeToStunState()

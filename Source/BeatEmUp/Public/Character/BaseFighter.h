@@ -63,6 +63,8 @@ public:
 	BaseState* ReturnAttackState();
 
 	UFUNCTION(BlueprintCallable)
+	void ChangeToGroundedState();
+	UFUNCTION(BlueprintCallable)
 	void ChangeToStunState();
 
 	UFUNCTION(BlueprintCallable)
@@ -70,7 +72,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ChangeToStunStateAir(FVector dir);
 
-	//BaseState* GetCurrentState();
+	const bool IsGrounded();
+
+	/*UFUNCTION(BlueprintCallable)
+	BaseState* GetCurrentState() { return nullptr; };*/
 
 	InputBuffer* ReturnInputBuffer();
 
@@ -82,13 +87,13 @@ protected:
 
 public:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UHitbox* Hitbox;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCapsuleComponent* CapsuleMesh;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USkeletalMeshComponent* SkeletalMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Default animations")
@@ -111,6 +116,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UGroundedAttackState* LightAttack;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCustomState> CustomState;
 
 	FVector2D MoveDirection;
 

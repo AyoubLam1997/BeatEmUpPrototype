@@ -28,7 +28,7 @@ BaseState* GroundedState::HandleInput(ABaseFighter& fighter)
 				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
 				{
 					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return fighter.LightAttack;
+					return fighter.CustomState.GetDefaultObject();
 				}
 			}
 		}
@@ -205,16 +205,20 @@ void AirStunState::Enter(ABaseFighter& fighter)
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air stun state"));
 
 	fighter.SkeletalMesh->PlayAnimation(fighter.FallBlendAnim, 1);
-	FVector BlendParams(0, fighter.GetVelocity().Y, 0);
+	FVector BlendParams(0, fighter.GetVelocity().Z, 0);
 	fighter.SkeletalMesh->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
 
 	fighter.CapsuleMesh->AddImpulse(Direction * 5);
+
+	m_CurrentStunTime = 0;
 }
 
 BaseState* AirStunState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.GetVelocity().Y <= 0 && !fighter.MovementPawn->IsFalling())
+	if (fighter.GetVelocity().Z <= 0 && fighter.IsGrounded() && m_CurrentStunTime > 1)
+	{
 		return new LayingState();
+	}
 
 	return nullptr;
 }
@@ -222,7 +226,7 @@ BaseState* AirStunState::HandleInput(ABaseFighter& fighter)
 void AirStunState::Update(ABaseFighter& fighter)
 {
 	m_CurrentStunTime += 1;
-	FVector BlendParams(0, fighter.GetVelocity().Y, 0);
+	FVector BlendParams(0, fighter.GetVelocity().Z, 0);
 	fighter.SkeletalMesh->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
 }
 
@@ -300,6 +304,48 @@ FStateToTransition::FStateToTransition() : m_State(nullptr)
 }
 
 FStatesToTransitionButton::FStatesToTransitionButton() : FStateToTransition(), m_Input(EInputType::LightPunch)
+{
+
+}
+
+void UCustomState::Enter(ABaseFighter& fighter)
+{
+	StateEnter(&fighter);
+}
+
+BaseState* UCustomState::HandleInput(ABaseFighter& fighter)
+{
+	StateHandleInput(&fighter);
+
+	return nullptr;
+}
+
+void UCustomState::Update(ABaseFighter& fighter)
+{
+	StateUpdate(&fighter);
+}
+
+void UCustomState::Exit(ABaseFighter& fighter)
+{
+	StateExit(&fighter);
+}
+
+void UCustomState::StateEnter_Implementation(ABaseFighter* fighter)
+{
+
+}
+
+UCustomState* UCustomState::StateHandleInput_Implementation(ABaseFighter* fighter)
+{
+	return nullptr;
+}
+
+void UCustomState::StateUpdate_Implementation(ABaseFighter* fighter)
+{
+
+}
+
+void UCustomState::StateExit_Implementation(ABaseFighter* fighter)
 {
 
 }

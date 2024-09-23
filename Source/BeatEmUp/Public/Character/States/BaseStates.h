@@ -280,6 +280,31 @@ public:
 ////	ABaseFighter* m_EnemyFighter;
 ////};
 //
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UCustomState : public UObject, public BaseState
+{
+	GENERATED_BODY()
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateEnter(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	UCustomState* StateHandleInput(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateUpdate(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateExit(ABaseFighter* fighter);
+};
+
 UCLASS(Blueprintable, BlueprintType)
 class BEATEMUP_API UGroundedAttackState : public UPrimaryDataAsset, public GroundedState
 {

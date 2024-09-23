@@ -100,13 +100,10 @@ public:
 
 	void SetInputActionPressed(bool pressed);
 
-	EInputType InputDirection;
-
-	UInputAction* m_Action;
-
 	bool m_Used = 0;
-
 	bool m_InputActionPressed = 0;
+
+	EInputType InputDirection;
 
 	TArray<InputStateItem> m_Buffer;
 
@@ -125,7 +122,6 @@ public:
 	~InputBuffer();
 
 	TArray<InputBufferItem*> m_InputBufferItems;
-	//TArray<InputAction*> m_InputActions;
 	TArray<MotionInput*> m_MotionInputs;
 
 	void Initialize();
