@@ -41,7 +41,7 @@ protected:
 
 	InputBuffer* BufferHandler;
 
-	BaseState* State;
+	UBaseState* State;
 
 	HitboxHandler* HBHandler;
 
@@ -58,9 +58,9 @@ public:
 
 	void Walk();
 
-	void ChangeState(BaseState* state);
+	void ChangeState(UBaseState* state);
 
-	BaseState* ReturnAttackState();
+	UBaseState* ReturnAttackState();
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeToGroundedState();
@@ -115,10 +115,10 @@ public:
 	UInputAction* MovementInput;
 
 	UPROPERTY(EditAnywhere)
-	UGroundedAttackState* LightAttack;
+	TSubclassOf<UGroundedAttackState> LightAttack;
 
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UCustomState> CustomState;
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<UBaseState> CustomState;*/
 
 	FVector2D MoveDirection;
 

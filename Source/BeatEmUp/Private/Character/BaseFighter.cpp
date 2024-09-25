@@ -40,7 +40,8 @@ void ABaseFighter::BeginPlay()
 	CapsuleMesh = FindComponentByClass<UCapsuleComponent>();
 	SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
 
-	State = new GroundedState();
+	State = NewObject <UGroundedState>();
+	State->Enter(*this);
 
 	HBHandler = new HitboxHandler();
 	Hitbox = FindComponentByClass<UHitbox>();
@@ -92,12 +93,12 @@ void ABaseFighter::Tick(float DeltaTime)
 	{
 		State->Update(*this);
 
-		BaseState* state = State->HandleInput(*this);
+		UBaseState* state = State->HandleInput(*this);
 
 		if (state != nullptr)
 		{
 			State->Exit(*this);
-
+			State->ConditionalBeginDestroy();
 			State = nullptr;
 
 			State = state;
@@ -105,7 +106,6 @@ void ABaseFighter::Tick(float DeltaTime)
 			State->Enter(*this);
 		}
 	}
-
 }
 
 // Called to bind functionality to input
@@ -180,10 +180,10 @@ void ABaseFighter::Walk()
 
 }
 
-void ABaseFighter::ChangeState(BaseState* state)
+void ABaseFighter::ChangeState(UBaseState* state)
 {
 	State->Exit(*this);
-
+	State->ConditionalBeginDestroy();
 	State = nullptr;
 
 	State = state;
@@ -191,9 +191,9 @@ void ABaseFighter::ChangeState(BaseState* state)
 	State->Enter(*this);
 }
 
-BaseState* ABaseFighter::ReturnAttackState()
+UBaseState* ABaseFighter::ReturnAttackState()
 {
-	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	/*for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
 	{
 		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
 		{
@@ -206,7 +206,7 @@ BaseState* ABaseFighter::ReturnAttackState()
 				}
 			}
 		}
-	}
+	}*/
 
 	return nullptr;
 }
@@ -239,22 +239,30 @@ const bool ABaseFighter::IsGrounded()
 
 void ABaseFighter::ChangeToGroundedState()
 {
-	ChangeState(new GroundedState());
+	ChangeState(NewObject < UGroundedState>());
 }
 
 void ABaseFighter::ChangeToStunState()
 {
-	ChangeState(new StunState());
+	ChangeState(NewObject < UStunState>());
 }
 
 void ABaseFighter::ChangeToStunStateKnock(FVector dir)
 {
-	ChangeState(new KnockbackStunState(dir, 60));
+	UKnockbackStunState* state = NewObject<UKnockbackStunState>();
+
+	state->Init(dir, 60);
+
+	ChangeState(state);
 }
 
 void ABaseFighter::ChangeToStunStateAir(FVector dir)
 {
-	ChangeState(new AirStunState(dir, 60));
+	UAirStunState* state = NewObject<UAirStunState>();
+
+	state->Init(dir, 60);
+
+	ChangeState(state);
 }
 
 HitboxHandler* ABaseFighter::ReturnHitboxHandler()

@@ -24,34 +24,39 @@ enum class EInputType;
  //	GENERATED_BODY()
  //};
 
-class BEATEMUP_API BaseState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UBaseState : public UObject
 {
-	//GENERATED_BODY()
+	GENERATED_BODY()
 public:
 	virtual void Enter(ABaseFighter& fighter) {};
-	virtual BaseState* HandleInput(ABaseFighter& fighter) { return nullptr; };
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) { return nullptr; };
 	virtual void Update(ABaseFighter& fighter) {};
 	virtual void Exit(ABaseFighter& fighter) {};
 };
 
-class BEATEMUP_API GroundedState : public BaseState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UGroundedState : public UBaseState
 {
+	GENERATED_BODY()
 public:
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 };
 
-class BEATEMUP_API LayingState : public GroundedState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API ULayingState : public UGroundedState
 {
+	GENERATED_BODY()
 public:
 
 	//LayingState();
 	//LayingState(float duration);
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 
@@ -60,21 +65,25 @@ private:
 	float m_LayingTimer;
 };
 
-class BEATEMUP_API StandingUpState : public GroundedState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UStandingUpState : public UGroundedState
 {
+	GENERATED_BODY()
 public:
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 };
 
-class BEATEMUP_API WalkState : public GroundedState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UWalkState : public UGroundedState
 {
+	GENERATED_BODY()
 public:
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 };
@@ -160,62 +169,73 @@ public:
 //	FVector m_ImpulseDirection;
 //};
 
-class BEATEMUP_API BaseStunState : virtual public BaseState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UBaseStunState : public UBaseState
 {
+	GENERATED_BODY()
 public:
 
 	virtual void Enter(ABaseFighter& fighter) override {};
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override { return nullptr; };
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override { return nullptr; };
 	virtual void Update(ABaseFighter& fighter) override {};
 	virtual void Exit(ABaseFighter& fighter) override {};
 
 private:
 };
 
-class BEATEMUP_API StunState : public BaseStunState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UStunState : public UBaseStunState
 {
+	GENERATED_BODY()
 public:
 
 	int m_CurrentStunTime;
 	int m_StunDuration;
 
-	StunState();
-	StunState(int duration);
+	UStunState();
+	UStunState(int duration);
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 
 private:
 };
 
-class BEATEMUP_API KnockbackStunState : public StunState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UKnockbackStunState : public UStunState
 {
+	GENERATED_BODY()
 public:
 
 	FVector Direction;
 
-	KnockbackStunState();
-	KnockbackStunState(FVector dir, int duration);
+	UKnockbackStunState();
+	//KnockbackStunState(FVector dir, int duration);
+
+	UFUNCTION(BlueprintCallable)
+	void Init(FVector dir, int duration);
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 
 private:
 };
 
-class BEATEMUP_API AirStunState : public KnockbackStunState
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UAirStunState : public UKnockbackStunState
 {
+	GENERATED_BODY()
 public:
 
-	//AirStunState();
-	AirStunState(FVector dir, int duration);
+	UAirStunState();
+	//AirStunState(FVector dir, int duration);
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 };
@@ -282,13 +302,13 @@ public:
 //
 
 UCLASS(Blueprintable, BlueprintType)
-class BEATEMUP_API UCustomState : public UObject, public BaseState
+class BEATEMUP_API UCustomState : public UBaseState
 {
 	GENERATED_BODY()
 public:
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 
@@ -306,7 +326,7 @@ public:
 };
 
 UCLASS(Blueprintable, BlueprintType)
-class BEATEMUP_API UGroundedAttackState : public UPrimaryDataAsset, public GroundedState
+class BEATEMUP_API UGroundedAttackState : public UGroundedState
 {
 	GENERATED_BODY()
 
@@ -329,7 +349,7 @@ public:
 	UAnimSequence* m_AnimationSequence;
 
 	virtual void Enter(ABaseFighter& fighter) override;
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 
@@ -348,8 +368,8 @@ public:
 
 	FStateToTransition();
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	UGroundedAttackState* m_State;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UBaseState> m_State;
 };
 
 USTRUCT(Blueprintable, BlueprintType)
@@ -390,7 +410,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int m_MaxCancelFrame;
 
-	virtual BaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 };
 
 //class BEATEMUP_API SpecialMoveState : public BaseState
