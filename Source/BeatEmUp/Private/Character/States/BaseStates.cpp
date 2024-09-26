@@ -28,7 +28,8 @@ UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
 				{
 					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return fighter.LightAttack.GetDefaultObject();
+
+					return DuplicateObject(fighter.LightAttack.GetDefaultObject(), nullptr);
 				}
 			}
 		}
@@ -257,6 +258,8 @@ void UGroundedAttackState::Enter(ABaseFighter& fighter)
 
 	m_CurrentFrame = 0;
 
+	StateEnter(&fighter);
+
 	//fighter.m_SkeletalMesh->SetPosition(.15f);
 }
 
@@ -264,6 +267,8 @@ UBaseState* UGroundedAttackState::HandleInput(ABaseFighter& fighter)
 {
 	if (fighter.SkeletalMesh->GetPosition() >= m_AnimationSequence->GetPlayLength())
 		return NewObject <UGroundedState>();
+
+	StateHandleInput(&fighter);
 
 	return nullptr;
 }
@@ -281,6 +286,8 @@ void UGroundedAttackState::Update(ABaseFighter& fighter)
 
 	if (m_CurrentFrame == m_MaxFrame)
 		fighter.Hitbox->CloseColliderState();
+
+	StateUpdate(&fighter);
 }
 
 void UGroundedAttackState::Exit(ABaseFighter& fighter)
@@ -288,6 +295,28 @@ void UGroundedAttackState::Exit(ABaseFighter& fighter)
 	fighter.Hitbox->CloseColliderState();
 	fighter.Hitbox->ClearCollidedObjects();
 	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
+
+	StateExit(&fighter);
+}
+
+void UGroundedAttackState::StateEnter_Implementation(ABaseFighter* fighter)
+{
+
+}
+
+UBaseState* UGroundedAttackState::StateHandleInput_Implementation(ABaseFighter* fighter)
+{
+	return nullptr;
+}
+
+void UGroundedAttackState::StateUpdate_Implementation(ABaseFighter* fighter)
+{
+
+}
+
+void UGroundedAttackState::StateExit_Implementation(ABaseFighter* fighter)
+{
+
 }
 
 UBaseState* UGroundedComboAttackState::HandleInput(ABaseFighter& fighter)
@@ -301,11 +330,14 @@ UBaseState* UGroundedComboAttackState::HandleInput(ABaseFighter& fighter)
 				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
 				{
 					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return m_State.m_State.GetDefaultObject();
+
+					return DuplicateObject(m_State.m_State.GetDefaultObject(), nullptr);
 				}
 			}
 		}
 	}
+
+	StateHandleInput(&fighter);
 
 	return UGroundedAttackState::HandleInput(fighter);
 }

@@ -89,22 +89,27 @@ void ABaseFighter::Tick(float DeltaTime)
 	BufferHandler->BufferUpdate();
 	BufferHandler->UpdateMotion(0);
 
-	if (State != nullptr)
+	if (IsValid(State))
 	{
 		State->Update(*this);
 
-		UBaseState* state = State->HandleInput(*this);
+		/*UBaseState* newState = State->HandleInput(*this);
 
-		if (state != nullptr)
+		if (IsValid(newState))
 		{
 			State->Exit(*this);
-			State->ConditionalBeginDestroy();
+
+			UBaseState* stateToDestroy = State;
+
 			State = nullptr;
 
-			State = state;
+			stateToDestroy->MarkAsGarbage();
+			stateToDestroy->ConditionalBeginDestroy();
+
+			State = newState;
 
 			State->Enter(*this);
-		}
+		}*/
 	}
 }
 
@@ -160,10 +165,10 @@ void ABaseFighter::Walk()
 	FRotator yaw(0.f, rot.Yaw, 0.f);
 
 	FVector forwardDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::X);
-	AddMovementInput(FVector(2, 0, 0), MoveDirection.Y);
+	AddMovementInput(FVector(.75f, 0, 0), MoveDirection.Y);
 
 	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
-	AddMovementInput(FVector(0, 2, 0), MoveDirection.X);
+	AddMovementInput(FVector(0, .75f, 0), MoveDirection.X);
 	
 	if (MoveDirection.Length() != 0)
 	{
@@ -183,6 +188,7 @@ void ABaseFighter::Walk()
 void ABaseFighter::ChangeState(UBaseState* state)
 {
 	State->Exit(*this);
+	State->MarkAsGarbage();
 	State->ConditionalBeginDestroy();
 	State = nullptr;
 

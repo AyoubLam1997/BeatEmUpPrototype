@@ -353,8 +353,21 @@ public:
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 
+	UFUNCTION(BlueprintNativeEvent)
+	void StateEnter(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	UBaseState* StateHandleInput(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateUpdate(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateExit(ABaseFighter* fighter);
+
 protected:
 
+	UPROPERTY(BlueprintReadOnly)
 	int m_CurrentFrame;
 };
 
