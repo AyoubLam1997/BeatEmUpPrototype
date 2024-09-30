@@ -59,7 +59,14 @@ public:
 
 	void Walk();
 
-	void ChangeState(UBaseState* state);
+	UFUNCTION(BlueprintCallable)
+	void RotateToInputDirection();
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeState(UBaseState* newState);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeStateReference(TSubclassOf<UBaseState> newState);
 
 	UBaseState* ReturnAttackState();
 
@@ -117,10 +124,15 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UGroundedAttackState> LightAttack;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UBaseState> Grab;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UBaseState> Dash;
 
 	/*UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> CustomState;*/
 
+	UPROPERTY(BlueprintReadOnly)
 	FVector2D MoveDirection;
 
 	FRotator CurrentRotation;
@@ -135,6 +147,20 @@ public:
 
 	/*UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);*/
+
+	UFUNCTION(BlueprintCallable)
+	void SetPhysicsSlowMotion();
+
+	UFUNCTION(BlueprintCallable)
+	void SetPhysicsNormal();
+
+	UFUNCTION(BlueprintCallable)
+	bool InputCheck(EInputType input);
+	UFUNCTION(BlueprintCallable)
+	UBaseState* CancelToState(EInputType input, TSubclassOf<UBaseState> newState);
+
+	float SlowMotionTime;
+	bool SlowMotion;
 
 private:
 

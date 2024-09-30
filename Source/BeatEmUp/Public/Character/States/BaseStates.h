@@ -33,6 +33,8 @@ public:
 	virtual UBaseState* HandleInput(ABaseFighter& fighter) { return nullptr; };
 	virtual void Update(ABaseFighter& fighter) {};
 	virtual void Exit(ABaseFighter& fighter) {};
+
+	UBaseState* StateChange;
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -316,7 +318,7 @@ public:
 	void StateEnter(ABaseFighter* fighter);
 
 	UFUNCTION(BlueprintNativeEvent)
-	UCustomState* StateHandleInput(ABaseFighter* fighter);
+	UBaseState* StateHandleInput(ABaseFighter* fighter);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void StateUpdate(ABaseFighter* fighter);

@@ -32,6 +32,24 @@ UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 					return DuplicateObject(fighter.LightAttack.GetDefaultObject(), nullptr);
 				}
 			}
+			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::MediumPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				{
+					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
+
+					return DuplicateObject(fighter.Grab.GetDefaultObject(), nullptr);
+				}
+			}
+			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::HeavyPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				{
+					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
+
+					return DuplicateObject(fighter.Dash.GetDefaultObject(), nullptr);
+				}
+			}
 		}
 	}
 
@@ -270,6 +288,9 @@ UBaseState* UGroundedAttackState::HandleInput(ABaseFighter& fighter)
 
 	StateHandleInput(&fighter);
 
+	if (StateChange != nullptr)
+		return StateChange;
+
 	return nullptr;
 }
 
@@ -292,11 +313,13 @@ void UGroundedAttackState::Update(ABaseFighter& fighter)
 
 void UGroundedAttackState::Exit(ABaseFighter& fighter)
 {
+	StateExit(&fighter);
+
 	fighter.Hitbox->CloseColliderState();
 	fighter.Hitbox->ClearCollidedObjects();
 	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
 
-	StateExit(&fighter);
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
 }
 
 void UGroundedAttackState::StateEnter_Implementation(ABaseFighter* fighter)
@@ -359,9 +382,7 @@ void UCustomState::Enter(ABaseFighter& fighter)
 
 UBaseState* UCustomState::HandleInput(ABaseFighter& fighter)
 {
-	StateHandleInput(&fighter);
-
-	return nullptr;
+	return StateHandleInput(&fighter);
 }
 
 void UCustomState::Update(ABaseFighter& fighter)
@@ -379,7 +400,7 @@ void UCustomState::StateEnter_Implementation(ABaseFighter* fighter)
 
 }
 
-UCustomState* UCustomState::StateHandleInput_Implementation(ABaseFighter* fighter)
+UBaseState* UCustomState::StateHandleInput_Implementation(ABaseFighter* fighter)
 {
 	return nullptr;
 }

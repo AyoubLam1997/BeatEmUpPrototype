@@ -4,6 +4,7 @@
 #include "Character/BaseFighter.h"
 #include <EnhancedInputSubsystems.h>
 #include <EnhancedInputComponent.h>
+#include <Kismet/GameplayStatics.h>
 
 // Sets default values
 ABaseFighter::ABaseFighter()
@@ -41,14 +42,12 @@ void ABaseFighter::BeginPlay()
 	SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
 
 	State = NewObject <UGroundedState>();
-
 	State->AddToRoot();
-
 	State->Enter(*this);
 
-	//HBHandler = new HitboxHandler();
-	//Hitbox = FindComponentByClass<UHitbox>();
-	//Hitbox->AssignHitboxHandler(HBHandler);
+	HBHandler = new HitboxHandler();
+	Hitbox = FindComponentByClass<UHitbox>();
+	Hitbox->AssignHitboxHandler(HBHandler);
 
 	MovementPawn = FindComponentByClass<UFloatingPawnMovement>();
 
@@ -73,6 +72,11 @@ void ABaseFighter::InitializeController()
 // Called every frame
 void ABaseFighter::Tick(float DeltaTime)
 {
+	if (SlowMotionTime > 0.f && SlowMotion == 1)
+		SlowMotionTime --;
+	else if (SlowMotionTime <= 0.f && SlowMotion == 1)
+		SetPhysicsNormal();
+
 	Super::Tick(DeltaTime);
 
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(IsGrounded()));
@@ -89,14 +93,14 @@ void ABaseFighter::Tick(float DeltaTime)
 
 	//AddActorWorldRotation(q);
 
-	//BufferHandler->BufferUpdate();
-	//BufferHandler->UpdateMotion(0);
+	BufferHandler->BufferUpdate();
+	BufferHandler->UpdateMotion(0);
 
 	if (IsValid(State))
 	{
 		State->Update(*this);
 
-		/*UBaseState* newState = State->HandleInput(*this);
+		UBaseState* newState = State->HandleInput(*this);
 
 		if (IsValid(newState))
 		{
@@ -107,7 +111,7 @@ void ABaseFighter::Tick(float DeltaTime)
 			State = newState;
 
 			State->Enter(*this);
-		}*/
+		}
 	}
 }
 
@@ -167,7 +171,7 @@ void ABaseFighter::Walk()
 
 	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
 	AddMovementInput(FVector(0, .75f, 0), MoveDirection.X);
-	
+
 	if (MoveDirection.Length() != 0)
 	{
 		FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
@@ -183,21 +187,39 @@ void ABaseFighter::Walk()
 
 }
 
-void ABaseFighter::ChangeState(UBaseState* state)
+void ABaseFighter::RotateToInputDirection()
+{
+	if (MoveDirection.Length() != 0)
+	{
+		FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
+
+		SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
+	}
+}
+
+void ABaseFighter::ChangeState(UBaseState* newState)
 {
 	State->Exit(*this);
-	State->MarkAsGarbage();
-	State->ConditionalBeginDestroy();
-	State = nullptr;
 
-	State = state;
+	State->StateChange = nullptr;
+
+	UBaseState* stateToDestroy = State;
+	State = nullptr;
+	State = newState;
 
 	State->Enter(*this);
 }
 
+void ABaseFighter::ChangeStateReference(TSubclassOf <UBaseState> newState)
+{
+	UBaseState* obj = newState.GetDefaultObject();
+	
+	State->StateChange = obj;
+}
+
 UBaseState* ABaseFighter::ReturnAttackState()
 {
-	/*for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
 	{
 		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
 		{
@@ -206,11 +228,19 @@ UBaseState* ABaseFighter::ReturnAttackState()
 				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
 				{
 					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return LightAttack;
+					return LightAttack.GetDefaultObject();
+				}
+			}
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::HeavyPunch && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				{
+					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
+					return Dash.GetDefaultObject();
 				}
 			}
 		}
-	}*/
+	}
 
 	return nullptr;
 }
@@ -239,6 +269,64 @@ const bool ABaseFighter::IsGrounded()
 		return 1;
 
 	return 0;
+}
+
+bool ABaseFighter::InputCheck(EInputType input)
+{
+	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	{
+		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+		{
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				{
+					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+UBaseState* ABaseFighter::CancelToState(EInputType input, TSubclassOf<UBaseState> newState)
+{
+	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	{
+		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+		{
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection != input)
+				continue;
+
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				{
+					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
+					return newState.GetDefaultObject();
+				}
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+void ABaseFighter::SetPhysicsSlowMotion()
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), .1f);
+
+	SlowMotionTime = 12.f;
+	SlowMotion = 1;
+}
+
+void ABaseFighter::SetPhysicsNormal()
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+	SlowMotion = 0;
+	SlowMotionTime = 0.f;
 }
 
 void ABaseFighter::ChangeToGroundedState()
