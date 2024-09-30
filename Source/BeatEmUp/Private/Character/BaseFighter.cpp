@@ -41,11 +41,14 @@ void ABaseFighter::BeginPlay()
 	SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
 
 	State = NewObject <UGroundedState>();
+
+	State->AddToRoot();
+
 	State->Enter(*this);
 
-	HBHandler = new HitboxHandler();
-	Hitbox = FindComponentByClass<UHitbox>();
-	Hitbox->AssignHitboxHandler(HBHandler);
+	//HBHandler = new HitboxHandler();
+	//Hitbox = FindComponentByClass<UHitbox>();
+	//Hitbox->AssignHitboxHandler(HBHandler);
 
 	MovementPawn = FindComponentByClass<UFloatingPawnMovement>();
 
@@ -86,8 +89,8 @@ void ABaseFighter::Tick(float DeltaTime)
 
 	//AddActorWorldRotation(q);
 
-	BufferHandler->BufferUpdate();
-	BufferHandler->UpdateMotion(0);
+	//BufferHandler->BufferUpdate();
+	//BufferHandler->UpdateMotion(0);
 
 	if (IsValid(State))
 	{
@@ -100,12 +103,7 @@ void ABaseFighter::Tick(float DeltaTime)
 			State->Exit(*this);
 
 			UBaseState* stateToDestroy = State;
-
 			State = nullptr;
-
-			stateToDestroy->MarkAsGarbage();
-			stateToDestroy->ConditionalBeginDestroy();
-
 			State = newState;
 
 			State->Enter(*this);

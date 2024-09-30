@@ -41,6 +41,7 @@ protected:
 
 	InputBuffer* BufferHandler;
 
+	UPROPERTY()
 	UBaseState* State;
 
 	HitboxHandler* HBHandler;
