@@ -27,9 +27,9 @@ void ABeatEmTestArea::BeginPlay()
 	//////GetWorld()->GetPlayerControllerIterator()->Get(1)->Possess(m_P2Fighter);
 	////m_P2Fighter->InitializeController();
 
-	FVector cameraPos = FVector(-840, 0, 800);
+	FVector cameraPos = FVector(-750, 0, 150);
 
-	FTransform transform(FRotator{ -40.f, 0.f, 0.f }, cameraPos, FVector{ 1.f, 1.f, 1.f });
+	FTransform transform(FRotator{ -20.f, 0.f, 0.f }, cameraPos, FVector{ 1.f, 1.f, 1.f });
 	UWorld* poWorld = GetWorld();
 	Camera = poWorld->SpawnActor<ACameraActor>();
 	Camera->SetActorTransform(transform);

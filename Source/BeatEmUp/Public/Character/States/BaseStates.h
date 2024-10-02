@@ -89,6 +89,31 @@ public:
 	virtual void Update(ABaseFighter& fighter) override;
 	virtual void Exit(ABaseFighter& fighter) override;
 };
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UAirState : public UBaseState
+{
+	GENERATED_BODY()
+
+public:
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UJumpState : public UAirState
+{
+	GENERATED_BODY()
+
+public:
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+};
+
 //
 //UCLASS(Blueprintable, BlueprintType)
 //class BEATEMUP_API UDash : public UPrimaryDataAsset, public GroundedState
@@ -228,7 +253,7 @@ private:
 };
 
 UCLASS(Blueprintable, BlueprintType)
-class BEATEMUP_API UAirStunState : public UKnockbackStunState
+class BEATEMUP_API UAirStunState : public UKnockbackStunState/*, public UAirState*/
 {
 	GENERATED_BODY()
 public:
@@ -303,76 +328,6 @@ public:
 ////};
 //
 
-UCLASS(Blueprintable, BlueprintType)
-class BEATEMUP_API UCustomState : public UBaseState
-{
-	GENERATED_BODY()
-public:
-
-	virtual void Enter(ABaseFighter& fighter) override;
-	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
-	virtual void Update(ABaseFighter& fighter) override;
-	virtual void Exit(ABaseFighter& fighter) override;
-
-	UFUNCTION(BlueprintNativeEvent)
-	void StateEnter(ABaseFighter* fighter);
-
-	UFUNCTION(BlueprintNativeEvent)
-	UBaseState* StateHandleInput(ABaseFighter* fighter);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void StateUpdate(ABaseFighter* fighter);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void StateExit(ABaseFighter* fighter);
-};
-
-UCLASS(Blueprintable, BlueprintType)
-class BEATEMUP_API UGroundedAttackState : public UGroundedState
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	float m_Damage;
-
-	UPROPERTY(EditAnywhere)
-	int m_MinFrame;
-	UPROPERTY(EditAnywhere)
-	int m_MaxFrame;
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	int m_FreezeTime;
-
-	UPROPERTY(EditAnywhere)
-	UHitboxResponder* m_Responder;
-
-	UPROPERTY(EditAnywhere)
-	UAnimSequence* m_AnimationSequence;
-
-	virtual void Enter(ABaseFighter& fighter) override;
-	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
-	virtual void Update(ABaseFighter& fighter) override;
-	virtual void Exit(ABaseFighter& fighter) override;
-
-	UFUNCTION(BlueprintNativeEvent)
-	void StateEnter(ABaseFighter* fighter);
-
-	UFUNCTION(BlueprintNativeEvent)
-	UBaseState* StateHandleInput(ABaseFighter* fighter);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void StateUpdate(ABaseFighter* fighter);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void StateExit(ABaseFighter* fighter);
-
-protected:
-
-	UPROPERTY(BlueprintReadOnly)
-	int m_CurrentFrame;
-};
-
 //TODO: ADJUST THIS TO TRANSITION TO ANY DESIRED STATE (THAT MAKES USE OF THE DATA TABLES)
 USTRUCT(Blueprintable, BlueprintType)
 struct FStateToTransition
@@ -399,6 +354,188 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	EInputType m_Input;
 };
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UCustomState : public UBaseState
+{
+	GENERATED_BODY()
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateEnter(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	UBaseState* StateHandleInput(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateUpdate(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateExit(ABaseFighter* fighter);
+};
+
+USTRUCT(Blueprintable, BlueprintType)
+struct FAttackInterface
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float m_Damage;
+
+	UPROPERTY(EditAnywhere)
+	int m_MinFrame;
+	UPROPERTY(EditAnywhere)
+	int m_MaxFrame;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int m_FreezeTime;
+
+	UPROPERTY(EditAnywhere)
+	UHitboxResponder* m_Responder;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* m_AnimationSequence;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+	int m_CurrentFrame;
+};
+
+USTRUCT(Blueprintable, BlueprintType)
+struct FComboAttackInterface : public FAttackInterface
+{
+	GENERATED_BODY()
+
+public:
+
+	FStatesToTransitionButton StateToTransitionTo;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UGroundedAttackState : public UGroundedState/*, public UAttackState*/
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateEnter(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	UBaseState* StateHandleInput(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateUpdate(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateExit(ABaseFighter* fighter);
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float m_Damage;
+
+	UPROPERTY(EditAnywhere)
+	int m_MinFrame;
+	UPROPERTY(EditAnywhere)
+	int m_MaxFrame;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int m_FreezeTime;
+
+	UPROPERTY(EditAnywhere)
+	UHitboxResponder* m_Responder;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* m_AnimationSequence;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+	int m_CurrentFrame;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UAirAttackState : public UAirState
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateEnter(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	UBaseState* StateHandleInput(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateUpdate(ABaseFighter* fighter);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void StateExit(ABaseFighter* fighter);
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float m_Damage;
+
+	UPROPERTY(EditAnywhere)
+	int m_MinFrame;
+	UPROPERTY(EditAnywhere)
+	int m_MaxFrame;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int m_FreezeTime;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool AffectedByGravity;
+
+	UPROPERTY(EditAnywhere)
+	UHitboxResponder* m_Responder;
+
+	UPROPERTY(EditAnywhere)
+	UAnimSequence* m_AnimationSequence;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+	int m_CurrentFrame;
+};
+
+//UCLASS(Blueprintable, BlueprintType)
+//class BEATEMUP_API UAirAttackState : public UAirState, public UAttackState
+//{
+//	GENERATED_BODY()
+//
+//public:
+//
+//	virtual void Enter(ABaseFighter& fighter) override;
+//	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+//	virtual void Update(ABaseFighter& fighter) override;
+//	virtual void Exit(ABaseFighter& fighter) override;
+//
+//	UFUNCTION(BlueprintNativeEvent)
+//	void StateEnter(ABaseFighter* fighter);
+//
+//	UFUNCTION(BlueprintNativeEvent)
+//	UBaseState* StateHandleInput(ABaseFighter* fighter);
+//
+//	UFUNCTION(BlueprintNativeEvent)
+//	void StateUpdate(ABaseFighter* fighter);
+//
+//	UFUNCTION(BlueprintNativeEvent)
+//	void StateExit(ABaseFighter* fighter);
+//};
 
 //USTRUCT(Blueprintable, BlueprintType)
 //struct FStatesToTransitionMotionInput : public FStateToTransition
@@ -427,6 +564,42 @@ public:
 
 	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 };
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UAirComboAttackState : public UAirAttackState
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere)
+	FStatesToTransitionButton m_State;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int m_MinCancelFrame;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int m_MaxCancelFrame;
+
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+};
+
+//UCLASS(Blueprintable, BlueprintType)
+//class BEATEMUP_API UAirComboAttackState : public UAirAttackState
+//{
+//	GENERATED_BODY()
+//
+//public:
+//
+//	UPROPERTY(EditAnywhere)
+//	FStatesToTransitionButton m_State;
+//
+//	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+//	int m_MinCancelFrame;
+//	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+//	int m_MaxCancelFrame;
+//
+//	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+//};
 
 //class BEATEMUP_API SpecialMoveState : public BaseState
 //{

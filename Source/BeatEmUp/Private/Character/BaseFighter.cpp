@@ -38,8 +38,8 @@ void ABaseFighter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CapsuleMesh = FindComponentByClass<UCapsuleComponent>();
-	SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
+	//CapsuleMesh = FindComponentByClass<UCapsuleComponent>();
+	//SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
 
 	State = NewObject <UGroundedState>();
 	State->AddToRoot();
@@ -228,7 +228,17 @@ UBaseState* ABaseFighter::ReturnAttackState()
 				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
 				{
 					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return LightAttack.GetDefaultObject();
+
+					return DuplicateObject(LightAttack.GetDefaultObject(), nullptr);
+				}
+			}
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::MediumPunch && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				{
+					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
+
+					return DuplicateObject(MediumAttack.GetDefaultObject(), nullptr);
 				}
 			}
 			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::HeavyPunch && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
@@ -236,7 +246,8 @@ UBaseState* ABaseFighter::ReturnAttackState()
 				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
 				{
 					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return Dash.GetDefaultObject();
+
+					return NewObject<UJumpState>();
 				}
 			}
 		}
@@ -262,8 +273,6 @@ const bool ABaseFighter::IsGrounded()
 	// To run the query, you need a pointer to the current level, which you can get from an Actor with GetWorld()
 	// UWorld()->LineTraceSingleByChannel runs a line trace and returns the first actor hit over the provided collision channel.
 	GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
-
-	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
 
 	if (Hit.bBlockingHit && IsValid(Hit.GetActor()))
 		return 1;
@@ -331,12 +340,12 @@ void ABaseFighter::SetPhysicsNormal()
 
 void ABaseFighter::ChangeToGroundedState()
 {
-	ChangeState(NewObject < UGroundedState>());
+	ChangeState(NewObject<UGroundedState>());
 }
 
 void ABaseFighter::ChangeToStunState()
 {
-	ChangeState(NewObject < UStunState>());
+	ChangeState(NewObject<UStunState>());
 }
 
 void ABaseFighter::ChangeToStunStateKnock(FVector dir)
@@ -365,4 +374,12 @@ HitboxHandler* ABaseFighter::ReturnHitboxHandler()
 InputBuffer* ABaseFighter::ReturnInputBuffer()
 {
 	return BufferHandler;
+}
+
+bool ABaseFighter::HasHitEnemy()
+{
+	if (HBHandler->ReturnCollidedActors().Num() > 0)
+		return 1;
+
+	return 0;
 }

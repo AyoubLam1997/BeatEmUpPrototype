@@ -80,7 +80,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ChangeToStunStateAir(FVector dir);
 
+	UFUNCTION(BlueprintCallable)
 	const bool IsGrounded();
+
+	UFUNCTION(BlueprintCallable)
+	bool HasHitEnemy();
 
 	/*UFUNCTION(BlueprintCallable)
 	BaseState* GetCurrentState() { return nullptr; };*/
@@ -116,6 +120,8 @@ public:
 	UAnimSequence* LayingAnim;
 	UPROPERTY(EditAnywhere, Category = "Default animations")
 	UAnimSequence* StandingUpAnim;
+	UPROPERTY(EditAnywhere, Category = "Default animations")
+	UAnimSequence* JumpAnim;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")
 	UInputMappingContext* MappingContext;
@@ -124,6 +130,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UGroundedAttackState> LightAttack;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGroundedAttackState> MediumAttack;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UAirAttackState> AirLightAttack;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> Grab;
 	UPROPERTY(EditAnywhere)
