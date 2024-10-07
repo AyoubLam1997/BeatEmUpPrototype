@@ -219,41 +219,46 @@ void ABaseFighter::ChangeStateReference(TSubclassOf <UBaseState> newState)
 
 UBaseState* ABaseFighter::ReturnAttackState()
 {
+	if (InputCheck(EInputType::LightPunch))
+		return DuplicateObject(LightAttack.GetDefaultObject(), nullptr);
+	if (InputCheck(EInputType::MediumPunch))
+		return DuplicateObject(MediumAttack.GetDefaultObject(), nullptr);
+	if (InputCheck(EInputType::HeavyPunch))
+		return NewObject<UJumpState>();
+
+	/*if (InputCheck(EInputType::HeavyPunch))
+		return NewObject<UJumpState>();*/
+
+	return nullptr;
+}
+
+bool ABaseFighter::InputCheck(EInputType input)
+{
 	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
 	{
 		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
 		{
-			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			for (int j = 0; j < 6; j++)
 			{
-				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
+				if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].HoldTime > 0)
 				{
-					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return DuplicateObject(LightAttack.GetDefaultObject(), nullptr);
+					if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].CanExecute())
+					{
+						ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].SetUsedTrue();
+						return 1;
+					}
+					else if (!ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].CanExecute())
+					{
+						return 0;
+					}
 				}
-			}
-			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::MediumPunch && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return DuplicateObject(MediumAttack.GetDefaultObject(), nullptr);
-				}
-			}
-			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::HeavyPunch && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return NewObject<UJumpState>();
-				}
+				else
+					continue;
 			}
 		}
 	}
 
-	return nullptr;
+	return 0;
 }
 
 const bool ABaseFighter::IsGrounded()
@@ -280,45 +285,10 @@ const bool ABaseFighter::IsGrounded()
 	return 0;
 }
 
-bool ABaseFighter::InputCheck(EInputType input)
-{
-	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
-	{
-		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
-		{
-			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return 1;
-				}
-			}
-		}
-	}
-
-	return 0;
-}
-
 UBaseState* ABaseFighter::CancelToState(EInputType input, TSubclassOf<UBaseState> newState)
 {
-	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
-	{
-		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
-		{
-			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection != input)
-				continue;
-
-			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-					return newState.GetDefaultObject();
-				}
-			}
-		}
-	}
+	if(InputCheck(input))
+		return DuplicateObject(newState.GetDefaultObject(), nullptr);
 
 	return nullptr;
 }
@@ -376,10 +346,30 @@ InputBuffer* ABaseFighter::ReturnInputBuffer()
 	return BufferHandler;
 }
 
-bool ABaseFighter::HasHitEnemy()
+const bool ABaseFighter::HasHitEnemy() const
 {
 	if (HBHandler->ReturnCollidedActors().Num() > 0)
 		return 1;
 
 	return 0;
+}
+
+const FVector2D ABaseFighter::ReturnMoveInput() const
+{
+	return MoveDirection;
+}
+
+UCapsuleComponent* ABaseFighter::ReturnCapsuleMesh() const
+{
+	return CapsuleMesh;
+}
+
+USkeletalMeshComponent* ABaseFighter::ReturnSkeletalMesh() const
+{
+	return SkeletalMesh;
+}
+
+UHitbox* ABaseFighter::ReturnHitbox() const
+{
+	return Hitbox;
 }

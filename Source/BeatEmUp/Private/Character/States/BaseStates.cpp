@@ -11,47 +11,20 @@
 void UGroundedState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering default state"));
-	fighter.SkeletalMesh->PlayAnimation(fighter.IdleAnim, 1);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.IdleAnim, 1);
 }
 
 UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.MoveDirection.Length() > 0)
+	if (fighter.ReturnMoveInput().Length() > 0)
 		return NewObject<UWalkState>();
 
-	for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
-	{
-		if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
-		{
-			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return DuplicateObject(fighter.LightAttack.GetDefaultObject(), nullptr);
-				}
-			}
-			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::MediumPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return DuplicateObject(fighter.MediumAttack.GetDefaultObject(), nullptr);
-				}
-			}
-			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::HeavyPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return NewObject<UJumpState>();
-				}
-			}
-		}
-	}
+	if (fighter.InputCheck(EInputType::LightPunch))
+		return DuplicateObject(fighter.LightAttack.GetDefaultObject(), nullptr);
+	if (fighter.InputCheck(EInputType::MediumPunch))
+		return DuplicateObject(fighter.MediumAttack.GetDefaultObject(), nullptr);
+	if (fighter.InputCheck(EInputType::HeavyPunch))
+		return NewObject<UJumpState>();
 
 	return nullptr;
 }
@@ -68,14 +41,14 @@ void UGroundedState::Exit(ABaseFighter& fighter)
 void ULayingState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
-	fighter.SkeletalMesh->PlayAnimation(fighter.LayingAnim, 0);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.LayingAnim, 0);
 
-	m_LayingTimer = 0;
+	LayingTimer = 0;
 }
 
 UBaseState* ULayingState::HandleInput(ABaseFighter& fighter)
 {
-	if (m_LayingTimer >= 60)
+	if (LayingTimer >= 60)
 		return NewObject<UStandingUpState>();
 
 	return nullptr;
@@ -83,7 +56,7 @@ UBaseState* ULayingState::HandleInput(ABaseFighter& fighter)
 
 void ULayingState::Update(ABaseFighter& fighter)
 {
-	m_LayingTimer += 1;
+	LayingTimer += 1;
 }
 
 void ULayingState::Exit(ABaseFighter& fighter)
@@ -93,12 +66,12 @@ void ULayingState::Exit(ABaseFighter& fighter)
 void UStandingUpState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
-	fighter.SkeletalMesh->PlayAnimation(fighter.StandingUpAnim, 0);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.StandingUpAnim, 0);
 }
 
 UBaseState* UStandingUpState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.SkeletalMesh->GetPosition() >= fighter.StandingUpAnim->GetPlayLength())
+	if (fighter.ReturnSkeletalMesh()->GetPosition() >= fighter.StandingUpAnim->GetPlayLength())
 		return NewObject<UGroundedState>();
 
 	return nullptr;
@@ -116,12 +89,12 @@ void UStandingUpState::Exit(ABaseFighter& fighter)
 void UWalkState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering walk state"));
-	fighter.SkeletalMesh->PlayAnimation(fighter.WalkAnim, 1);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.WalkAnim, 1);
 }
 
 UBaseState* UWalkState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.MoveDirection.Length() <= 0)
+	if (fighter.ReturnMoveInput().Length() <= 0)
 		return NewObject <UGroundedState>();
 
 	return fighter.ReturnAttackState();
@@ -139,34 +112,16 @@ void UWalkState::Exit(ABaseFighter& fighter)
 void UAirState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air state"));
-	fighter.SkeletalMesh->PlayAnimation(fighter.JumpAnim, 0);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.JumpAnim, 0);
 }
 
 UBaseState* UAirState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.MoveDirection.Length() > 0)
-		return NewObject<UWalkState>();
-
-	for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
-	{
-		if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
-		{
-			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-			{
-				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-				{
-					fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-					return DuplicateObject(fighter.AirLightAttack.GetDefaultObject(), nullptr);
-				}
-			}
-		}
-	}
+	if (fighter.InputCheck(EInputType::LightPunch))
+		return DuplicateObject(fighter.AirLightAttack.GetDefaultObject(), nullptr);
 
 	if (fighter.GetVelocity().Z < 0 && fighter.IsGrounded())
-	{
 		return NewObject<UGroundedState>();
-	}
 
 	return nullptr;
 }
@@ -183,9 +138,9 @@ void UAirState::Exit(ABaseFighter& fighter)
 void UJumpState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering jump state"));
-	fighter.SkeletalMesh->PlayAnimation(fighter.JumpAnim, 0);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.JumpAnim, 0);
 
-	fighter.CapsuleMesh->AddImpulse(FVector(0, 0, 25000));
+	fighter.ReturnCapsuleMesh()->AddImpulse(FVector(0, 0, 25000));
 }
 
 UBaseState* UJumpState::HandleInput(ABaseFighter& fighter)
@@ -205,26 +160,29 @@ void UJumpState::Exit(ABaseFighter& fighter)
 
 UStunState::UStunState()
 {
-	m_StunDuration = 60;
+	StunDuration = 60;
 }
 
 UStunState::UStunState(int stun)
 {
-	m_StunDuration = stun;
+	StunDuration = stun;
 }
 
 void UStunState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering stun state"));
 
-	m_CurrentStunTime = 0;
+	CurrentStunTime = 0;
 
-	fighter.SkeletalMesh->PlayAnimation(fighter.StunnedAnim, 0);
+	if (!fighter.IsGrounded())
+		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.FallBlendAnim, 0);
+	else
+		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.StunnedAnim, 0);
 }
 
 UBaseState* UStunState::HandleInput(ABaseFighter& fighter)
 {
-	if (m_CurrentStunTime >= m_StunDuration)
+	if (CurrentStunTime >= StunDuration)
 	{
 		if (fighter.IsGrounded())
 		{
@@ -233,7 +191,7 @@ UBaseState* UStunState::HandleInput(ABaseFighter& fighter)
 
 		UAirStunState* state = NewObject<UAirStunState>();
 
-		state->Init(fighter.CapsuleMesh->GetPhysicsLinearVelocity() / 5, 60);
+		state->Init(fighter.ReturnCapsuleMesh()->GetPhysicsLinearVelocity() / 5, 60);
 
 		return state;
 	}
@@ -243,7 +201,7 @@ UBaseState* UStunState::HandleInput(ABaseFighter& fighter)
 
 void UStunState::Update(ABaseFighter& fighter)
 {
-	m_CurrentStunTime += 1;
+	CurrentStunTime += 1;
 }
 
 void UStunState::Exit(ABaseFighter& fighter)
@@ -265,28 +223,31 @@ void UKnockbackStunState::Init(FVector dir, int duration)
 {
 	Direction = dir;
 
-	m_StunDuration = duration;
+	StunDuration = duration;
 }
 
 void UKnockbackStunState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering stun state"));
 
-	m_CurrentStunTime = 0;
+	CurrentStunTime = 0;
 
-	fighter.SkeletalMesh->PlayAnimation(fighter.StunnedAnim, 0);
+	if(!fighter.IsGrounded())
+		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.FallBlendAnim, 0);
+	else
+		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.StunnedAnim, 0);
 
 	if (!fighter.IsGrounded())
 	{
-		fighter.CapsuleMesh->AddImpulse(Direction * 2);
+		fighter.ReturnCapsuleMesh()->AddImpulse(Direction * 2);
 	}
 	else
-		fighter.CapsuleMesh->AddImpulse(Direction * 5);
+		fighter.ReturnCapsuleMesh()->AddImpulse(Direction * 5);
 }
 
 UBaseState* UKnockbackStunState::HandleInput(ABaseFighter& fighter)
 {
-	if (m_CurrentStunTime >= m_StunDuration)
+	if (CurrentStunTime >= StunDuration)
 	{
 		if (fighter.IsGrounded())
 		{
@@ -295,7 +256,7 @@ UBaseState* UKnockbackStunState::HandleInput(ABaseFighter& fighter)
 
 		UAirStunState* state = NewObject<UAirStunState>();
 
-		state->Init(fighter.CapsuleMesh->GetPhysicsLinearVelocity() / 5, 60);
+		state->Init(fighter.ReturnCapsuleMesh()->GetPhysicsLinearVelocity() / 5, 60);
 
 		return state;
 	}
@@ -305,21 +266,21 @@ UBaseState* UKnockbackStunState::HandleInput(ABaseFighter& fighter)
 
 void UKnockbackStunState::Update(ABaseFighter& fighter)
 {
-	m_CurrentStunTime += 1;
+	CurrentStunTime += 1;
 
-	if (fighter.CapsuleMesh->GetPhysicsLinearVelocity().Z != 0)
+	if (fighter.ReturnCapsuleMesh()->GetPhysicsLinearVelocity().Z != 0)
 	{
-		float x = fighter.CapsuleMesh->GetPhysicsLinearVelocity().X;
-		float y = fighter.CapsuleMesh->GetPhysicsLinearVelocity().Y;
+		float x = fighter.ReturnCapsuleMesh()->GetPhysicsLinearVelocity().X;
+		float y = fighter.ReturnCapsuleMesh()->GetPhysicsLinearVelocity().Y;
 
 		if(!fighter.IsGrounded())
-			fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector(x, y, 0));
+			fighter.ReturnCapsuleMesh()->SetPhysicsLinearVelocity(FVector(x, y, 0));
 	}
 }
 
 void UKnockbackStunState::Exit(ABaseFighter& fighter)
 {
-	fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector::Zero());
+	fighter.ReturnCapsuleMesh()->SetPhysicsLinearVelocity(FVector::Zero());
 }
 
 UAirStunState::UAirStunState() : UKnockbackStunState()
@@ -336,88 +297,88 @@ void UAirStunState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air stun state"));
 
-	fighter.SkeletalMesh->PlayAnimation(fighter.FallBlendAnim, 1);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.FallBlendAnim, 1);
 	FVector BlendParams(0, fighter.GetVelocity().Z, 0);
-	fighter.SkeletalMesh->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
+	fighter.ReturnSkeletalMesh()->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
 
-	fighter.CapsuleMesh->AddImpulse(Direction * 5);
+	fighter.ReturnCapsuleMesh()->AddImpulse(Direction * 5);
 
-	m_CurrentStunTime = 0;
+	CurrentStunTime = 0;
 }
 
 UBaseState* UAirStunState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.GetVelocity().Z <= 0 && fighter.IsGrounded() && m_CurrentStunTime > 1)
-	{
+	if (fighter.GetVelocity().Z <= 0 && fighter.IsGrounded() && CurrentStunTime > 1)
 		return NewObject<ULayingState>();
-	}
 
 	return nullptr;
 }
 
 void UAirStunState::Update(ABaseFighter& fighter)
 {
-	m_CurrentStunTime += 1;
+	CurrentStunTime += 1;
 	FVector BlendParams(0, fighter.GetVelocity().Z, 0);
-	fighter.SkeletalMesh->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
+	fighter.ReturnSkeletalMesh()->GetSingleNodeInstance()->SetBlendSpacePosition(BlendParams);
 }
 
 void UAirStunState::Exit(ABaseFighter& fighter)
 {
-	fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector::Zero());
+	fighter.ReturnCapsuleMesh()->SetPhysicsLinearVelocity(FVector::Zero());
 }
 
-void UGroundedAttackState::Enter(ABaseFighter& fighter)
+void UAttackState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state"));
 
-	fighter.SkeletalMesh->PlayAnimation(m_AnimationSequence, 0);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(AnimationSequence, 0);
 
-	fighter.Hitbox->SetResponder(m_Responder);
+	fighter.ReturnHitbox()->SetResponder(Responder);
 
-	m_CurrentFrame = 0;
+	CurrentFrame = 0;
 
 	StateEnter(&fighter);
 
 	//fighter.m_SkeletalMesh->SetPosition(.15f);
 }
 
-UBaseState* UGroundedAttackState::HandleInput(ABaseFighter& fighter)
+UBaseState* UAttackState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.SkeletalMesh->GetPosition() >= m_AnimationSequence->GetPlayLength())
+	if (fighter.ReturnSkeletalMesh()->GetPosition() >= AnimationSequence->GetPlayLength())
+	{
+		if(!fighter.IsGrounded())
+			return NewObject <UAirState>();
 		return NewObject <UGroundedState>();
-
-	StateHandleInput(&fighter);
+	}
 
 	if (StateChange != nullptr)
 		return StateChange;
 
-	return nullptr;
+	return StateHandleInput(&fighter);
 }
 
-void UGroundedAttackState::Update(ABaseFighter& fighter)
+void UAttackState::Update(ABaseFighter& fighter)
 {
-	m_CurrentFrame = (int)(fighter.SkeletalMesh->GetPosition() * 60);
+	CurrentFrame = (int)(fighter.ReturnSkeletalMesh()->GetPosition() * 60);
 
-	FString frameText = FString::FromInt(m_CurrentFrame);
+	FString frameText = FString::FromInt(CurrentFrame);
 
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
 
-	if (m_CurrentFrame == m_MinFrame)
-		fighter.Hitbox->OpenColliderState();
+	if (CurrentFrame == MinFrame)
+		fighter.ReturnHitbox()->OpenColliderState();
 
-	if (m_CurrentFrame == m_MaxFrame)
-		fighter.Hitbox->CloseColliderState();
+	if (CurrentFrame == MaxFrame)
+		fighter.ReturnHitbox()->CloseColliderState();
 
 	StateUpdate(&fighter);
 }
 
-void UGroundedAttackState::Exit(ABaseFighter& fighter)
+void UAttackState::Exit(ABaseFighter& fighter)
 {
 	StateExit(&fighter);
 
-	fighter.Hitbox->CloseColliderState();
-	fighter.Hitbox->ClearCollidedObjects();
+	fighter.ReturnHitbox()->CloseColliderState();
+	fighter.ReturnHitbox()->ClearCollidedObjects();
 	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
 
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
@@ -425,68 +386,39 @@ void UGroundedAttackState::Exit(ABaseFighter& fighter)
 
 void UAirAttackState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state"));
+	fighter.ReturnCapsuleMesh()->SetPhysicsLinearVelocity(FVector(0, 0, 0));
 
-	fighter.SkeletalMesh->PlayAnimation(m_AnimationSequence, 0);
-
-	fighter.Hitbox->SetResponder(m_Responder);
-
-	m_CurrentFrame = 0;
-
-	fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector(0, 0, 0));
-
-	StateEnter(&fighter);
+	UAttackState::Enter(fighter);
 
 	//fighter.m_SkeletalMesh->SetPosition(.15f);
 }
 
 UBaseState* UAirAttackState::HandleInput(ABaseFighter& fighter)
 {
-	if (fighter.SkeletalMesh->GetPosition() >= m_AnimationSequence->GetPlayLength())
+	if (fighter.ReturnSkeletalMesh()->GetPosition() >= AnimationSequence->GetPlayLength())
+	{
+		if (fighter.GetVelocity().Z < 0 && fighter.IsGrounded())
+			return NewObject <UGroundedState>();
 		return NewObject <UAirState>();
-
-	StateHandleInput(&fighter);
+	}
 
 	if (StateChange != nullptr)
 		return StateChange;
 
-	if (fighter.GetVelocity().Z < 0 && fighter.IsGrounded())
-	{
-		return NewObject<UGroundedState>();
-	}
-
-	return nullptr;
+	return StateHandleInput(&fighter);
 }
 
 void UAirAttackState::Update(ABaseFighter& fighter)
 {
-	m_CurrentFrame = (int)(fighter.SkeletalMesh->GetPosition() * 60);
+	if (!AffectedByGravity)
+		fighter.ReturnCapsuleMesh()->SetPhysicsLinearVelocity(FVector(0, 0, 0));
 
-	FString frameText = FString::FromInt(m_CurrentFrame);
-
-	if(!AffectedByGravity)
-		fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector(0, 0, 0));
-
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
-
-	if (m_CurrentFrame == m_MinFrame)
-		fighter.Hitbox->OpenColliderState();
-
-	if (m_CurrentFrame == m_MaxFrame)
-		fighter.Hitbox->CloseColliderState();
-
-	StateUpdate(&fighter);
+	UAttackState::Update(fighter);
 }
 
 void UAirAttackState::Exit(ABaseFighter& fighter)
 {
-	StateExit(&fighter);
-
-	fighter.Hitbox->CloseColliderState();
-	fighter.Hitbox->ClearCollidedObjects();
-	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
+	UAttackState::Exit(fighter);
 }
 
 //void UAirAttackState::Enter(ABaseFighter& fighter)
@@ -495,9 +427,9 @@ void UAirAttackState::Exit(ABaseFighter& fighter)
 //
 //	fighter.SkeletalMesh->PlayAnimation(m_AnimationSequence, 0);
 //
-//	fighter.Hitbox->SetResponder(m_Responder);
+//	fighter.ReturnHitbox()->SetResponder(m_Responder);
 //
-//	fighter.CapsuleMesh->SetPhysicsLinearVelocity(FVector(0, 0, 0));
+//	fighter.ReturnCapsuleMesh()->SetPhysicsLinearVelocity(FVector(0, 0, 0));
 //
 //	m_CurrentFrame = 0;
 //
@@ -528,10 +460,10 @@ void UAirAttackState::Exit(ABaseFighter& fighter)
 //	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
 //
 //	if (m_CurrentFrame == m_MinFrame)
-//		fighter.Hitbox->OpenColliderState();
+//		fighter.ReturnHitbox()->OpenColliderState();
 //
 //	if (m_CurrentFrame == m_MaxFrame)
-//		fighter.Hitbox->CloseColliderState();
+//		fighter.ReturnHitbox()->CloseColliderState();
 //
 //	StateUpdate(&fighter);
 //}
@@ -540,97 +472,77 @@ void UAirAttackState::Exit(ABaseFighter& fighter)
 //{
 //	StateExit(&fighter);
 //
-//	fighter.Hitbox->CloseColliderState();
-//	fighter.Hitbox->ClearCollidedObjects();
+//	fighter.ReturnHitbox()->CloseColliderState();
+//	fighter.ReturnHitbox()->ClearCollidedObjects();
 //	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
 //
 //	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
 //}
 
-void UGroundedAttackState::StateEnter_Implementation(ABaseFighter* fighter)
+void UAttackState::StateEnter_Implementation(ABaseFighter* fighter)
 {
 
 }
 
-UBaseState* UGroundedAttackState::StateHandleInput_Implementation(ABaseFighter* fighter)
-{
-	return nullptr;
-}
-
-void UGroundedAttackState::StateUpdate_Implementation(ABaseFighter* fighter)
-{
-
-}
-
-void UGroundedAttackState::StateExit_Implementation(ABaseFighter* fighter)
-{
-
-}
-
-void UAirAttackState::StateEnter_Implementation(ABaseFighter* fighter)
-{
-
-}
-
-UBaseState* UAirAttackState::StateHandleInput_Implementation(ABaseFighter* fighter)
+UBaseState* UAttackState::StateHandleInput_Implementation(ABaseFighter* fighter)
 {
 	return nullptr;
 }
 
-void UAirAttackState::StateUpdate_Implementation(ABaseFighter* fighter)
+void UAttackState::StateUpdate_Implementation(ABaseFighter* fighter)
 {
 
 }
 
-void UAirAttackState::StateExit_Implementation(ABaseFighter* fighter)
+void UAttackState::StateExit_Implementation(ABaseFighter* fighter)
 {
 
 }
+//
+//void UAirAttackState::StateEnter_Implementation(ABaseFighter* fighter)
+//{
+//
+//}
+//
+//UBaseState* UAirAttackState::StateHandleInput_Implementation(ABaseFighter* fighter)
+//{
+//	return nullptr;
+//}
+//
+//void UAirAttackState::StateUpdate_Implementation(ABaseFighter* fighter)
+//{
+//
+//}
+//
+//void UAirAttackState::StateExit_Implementation(ABaseFighter* fighter)
+//{
+//
+//}
 
 UBaseState* UGroundedComboAttackState::HandleInput(ABaseFighter& fighter)
 {
-	for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	if (CurrentFrame >= MinCancelFrame && CurrentFrame <= MaxCancelFrame)
 	{
-		if (m_CurrentFrame >= m_MinCancelFrame && m_CurrentFrame <= m_MaxCancelFrame)
+		if (fighter.HasHitEnemy())
 		{
-			if (fighter.ReturnHitboxHandler()->ReturnCollidedActors().Num() > 0)
-			{
-				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == m_State.m_Input && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-				{
-					if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-					{
-						fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-						return DuplicateObject(m_State.m_State.GetDefaultObject(), nullptr);
-					}
-				}
-			}
+			if (fighter.InputCheck(State.Input))
+				return DuplicateObject(State.State.GetDefaultObject(), nullptr);
 		}
 	}
 
 	StateHandleInput(&fighter);
 
-	return UGroundedAttackState::HandleInput(fighter);
+	return UAttackState::HandleInput(fighter);
 }
 
 UBaseState* UAirComboAttackState::HandleInput(ABaseFighter& fighter)
 {
-	for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	if (CurrentFrame >= MinCancelFrame && CurrentFrame <= MaxCancelFrame)
 	{
-		if (m_CurrentFrame >= m_MinCancelFrame && m_CurrentFrame <= m_MaxCancelFrame)
+		if (fighter.HasHitEnemy())
 		{
-			if (fighter.ReturnHitboxHandler()->ReturnCollidedActors().Num() > 0)
-			{
-				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == m_State.m_Input && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
-				{
-					if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].CanExecute())
-					{
-						fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].SetUsedTrue();
-
-						return DuplicateObject(m_State.m_State.GetDefaultObject(), nullptr);
-					}
-				}
-			}
+			if (fighter.InputCheck(State.Input))
+				return DuplicateObject(State.State.GetDefaultObject(), nullptr);
 		}
 	}
 
@@ -663,12 +575,12 @@ UBaseState* UAirComboAttackState::HandleInput(ABaseFighter& fighter)
 //	return UAirAttackState::HandleInput(fighter);
 //}
 
-FStateToTransition::FStateToTransition() : m_State(nullptr)
+FStateToTransition::FStateToTransition() : State(nullptr)
 {
 
 }
 
-FStatesToTransitionButton::FStatesToTransitionButton() : FStateToTransition(), m_Input(EInputType::LightPunch)
+FStatesToTransitionButton::FStatesToTransitionButton() : FStateToTransition(), Input(EInputType::LightPunch)
 {
 
 }

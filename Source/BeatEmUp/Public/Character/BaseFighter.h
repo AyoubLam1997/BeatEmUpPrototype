@@ -36,19 +36,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentHealth;
 
-	EInputType ForwardInput;
-	EInputType BackwardInput;
-
 	InputBuffer* BufferHandler;
 
 	UPROPERTY()
 	UBaseState* State;
 
 	HitboxHandler* HBHandler;
-
-	bool FacingRight = 0;
-
-	int FreezeTime = 0;
 
 public:
 	// Sets default values for this pawn's properties
@@ -57,6 +50,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InitializeController();
 
+	UFUNCTION(BlueprintCallable)
 	void Walk();
 
 	UFUNCTION(BlueprintCallable)
@@ -84,7 +78,7 @@ public:
 	const bool IsGrounded();
 
 	UFUNCTION(BlueprintCallable)
-	bool HasHitEnemy();
+	const bool HasHitEnemy() const;
 
 	/*UFUNCTION(BlueprintCallable)
 	BaseState* GetCurrentState() { return nullptr; };*/
@@ -94,19 +88,11 @@ public:
 	HitboxHandler* ReturnHitboxHandler();
 
 protected:
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UHitbox* Hitbox;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UCapsuleComponent* CapsuleMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USkeletalMeshComponent* SkeletalMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Default animations")
 	UBlendSpace* FallBlendAnim;
@@ -129,9 +115,9 @@ public:
 	UInputAction* MovementInput;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGroundedAttackState> LightAttack;
+	TSubclassOf<UAttackState> LightAttack;
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGroundedAttackState> MediumAttack;
+	TSubclassOf<UAttackState> MediumAttack;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAirAttackState> AirLightAttack;
 	UPROPERTY(EditAnywhere)
@@ -141,11 +127,6 @@ public:
 
 	/*UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> CustomState;*/
-
-	UPROPERTY(BlueprintReadOnly)
-	FVector2D MoveDirection;
-
-	FRotator CurrentRotation;
 
 	UFloatingPawnMovement* MovementPawn;
 
@@ -166,16 +147,40 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool InputCheck(EInputType input);
+
 	UFUNCTION(BlueprintCallable)
 	UBaseState* CancelToState(EInputType input, TSubclassOf<UBaseState> newState);
+
+	UFUNCTION(BlueprintCallable)
+	const FVector2D ReturnMoveInput() const;
+
+	UFUNCTION(BlueprintCallable)
+	UCapsuleComponent* ReturnCapsuleMesh() const;
+	UFUNCTION(BlueprintCallable)
+	USkeletalMeshComponent* ReturnSkeletalMesh() const;
+
+	UHitbox* ReturnHitbox() const;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D MoveDirection;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UHitbox* Hitbox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UCapsuleComponent* CapsuleMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkeletalMeshComponent* SkeletalMesh;
+
+private:
 
 	float SlowMotionTime;
 	bool SlowMotion;
 
-private:
-
 	void ButtonPressed(const FInputActionValue& value, const int index);
 	void SetMoveDirection(const FInputActionValue& value);
 	void ResetMoveDirection(const FInputActionValue& value);
-
 };
