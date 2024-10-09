@@ -19,7 +19,7 @@ class BEATEMUP_API ABeatEmTestArea : public AGameModeBase
 public:
 
 	void BeginPlay() override;
-	//void Tick(float DeltaTime) override;
+	void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf< ABaseFighter> FighterToSpawn;

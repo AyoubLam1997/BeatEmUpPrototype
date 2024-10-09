@@ -23,6 +23,13 @@
 
 #include "BaseFighter.generated.h"
 
+UENUM(Blueprintable)
+enum class EControlState
+{
+	Player = 0,
+	AI
+};
+
 UCLASS()
 class BEATEMUP_API ABaseFighter : public APawn
 {
@@ -49,6 +56,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void InitializeController();
+	UFUNCTION(BlueprintCallable)
+	void InitializeAIController();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void InitializeAIControllerBlueprint();
 
 	UFUNCTION(BlueprintCallable)
 	void Walk();
@@ -93,6 +105,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+
+	UPROPERTY(EditAnywhere, Category = "Default animations")
+	TSubclassOf<AController> Cont;
 
 	UPROPERTY(EditAnywhere, Category = "Default animations")
 	UBlendSpace* FallBlendAnim;
@@ -160,6 +175,10 @@ public:
 	USkeletalMeshComponent* ReturnSkeletalMesh() const;
 
 	UHitbox* ReturnHitbox() const;
+
+	void SetMoveDirection(FVector dir);
+
+	TEnumAsByte <EControlState> ControlState = EControlState::Player;
 
 protected:
 

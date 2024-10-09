@@ -61,12 +61,47 @@ void ABaseFighter::InitializeController()
 	if (APlayerController* playerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
+		{
 			SubSystem->AddMappingContext(MappingContext, 0);
+
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Input map context set to controller"));
+		}
 		else
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("No enhanced input"));
 	}
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("No controller to control"));
+}
+
+void ABaseFighter::InitializeAIController()
+{
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnInfo.OverrideLevel = GetLevel();
+	SpawnInfo.ObjectFlags |= RF_Transient;	// We never want to save AI controllers into a map
+	AController* NewController = GetWorld()->SpawnActor<AController>(Cont, GetActorLocation(), GetActorRotation(), SpawnInfo);
+	if (NewController != NULL)
+	{
+		// if successful will result in setting this->Controller 
+		// as part of possession mechanics
+		NewController->Possess(this);
+	}
+
+	ControlState = EControlState::AI;
+
+	for (int i = 0; i < MappingContext->GetMappings().Num(); i++)
+	{
+		InputBufferItem* item = new InputBufferItem();
+
+		EInputType input = InputFromString(MappingContext->GetMappings()[i].Action.GetName());
+
+		if (input != EInputType::None)
+		{
+			item->AssignDirection(input);
+
+			BufferHandler->m_InputBufferItems.Add(item);
+		}
+	}
 }
 
 // Called every frame
@@ -76,6 +111,27 @@ void ABaseFighter::Tick(float DeltaTime)
 		SlowMotionTime --;
 	else if (SlowMotionTime <= 0.f && SlowMotion == 1)
 		SetPhysicsNormal();
+
+	/*if (ControlState == EControlState::AI)
+	{
+		for (int i = 0; i < BufferHandler->m_InputBufferItems.Num(); i++)
+		{
+			if (BufferHandler->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+			{
+				if (BufferHandler->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch)
+				{
+					if (BufferHandler->m_InputBufferItems[i]->m_InputActionPressed == 0)
+					{
+						BufferHandler->m_InputBufferItems[i]->SetInputActionPressed(1);
+					}
+					else if (BufferHandler->m_InputBufferItems[i]->m_InputActionPressed == 1)
+					{
+						BufferHandler->m_InputBufferItems[i]->SetInputActionPressed(0);
+					}
+				}
+			}
+		}
+	}*/
 
 	Super::Tick(DeltaTime);
 
@@ -106,10 +162,13 @@ void ABaseFighter::Tick(float DeltaTime)
 		{
 			State->Exit(*this);
 
+			State->RemoveFromRoot();
+
 			UBaseState* stateToDestroy = State;
 			State = nullptr;
 			State = newState;
 
+			State->AddToRoot();
 			State->Enter(*this);
 		}
 	}
@@ -160,8 +219,29 @@ void ABaseFighter::ResetMoveDirection(const FInputActionValue& value)
 	MoveDirection = FVector2D(0, 0);
 }
 
+void ABaseFighter::SetMoveDirection(FVector dir)
+{
+	if (ControlState == EControlState::AI)
+		MoveDirection = FVector2D(dir.X, dir.Y);
+}
+
 void ABaseFighter::Walk()
 {
+	if (ControlState == EControlState::AI)
+	{
+		CapsuleMesh->SetPhysicsLinearVelocity(FVector(MoveDirection.X * 100, MoveDirection.Y * 100, CapsuleMesh->GetPhysicsLinearVelocity().Z));
+
+		if (MoveDirection.Length() != 0)
+		{
+			FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
+
+			SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
+		}
+
+		return;
+	}
+
+
 	FRotator rot = GetActorRotation();
 
 	FRotator yaw(0.f, rot.Yaw, 0.f);
@@ -244,6 +324,7 @@ bool ABaseFighter::InputCheck(EInputType input)
 				{
 					if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].CanExecute())
 					{
+						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Button pressed"));
 						ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].SetUsedTrue();
 						return 1;
 					}
@@ -372,4 +453,9 @@ USkeletalMeshComponent* ABaseFighter::ReturnSkeletalMesh() const
 UHitbox* ABaseFighter::ReturnHitbox() const
 {
 	return Hitbox;
+}
+
+void ABaseFighter::InitializeAIControllerBlueprint_Implementation()
+{
+
 }

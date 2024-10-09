@@ -22,8 +22,10 @@ void ABeatEmTestArea::BeginPlay()
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::FromInt(Fighter != nullptr));
 
 	Fighter->InitializeController();
-	
+
 	Fighter2 = GetWorld()->SpawnActor<ABaseFighter>(FighterToSpawn2, pos2, rot1, SpawnInfo);
+	Fighter2->InitializeAIController();
+
 	//////GetWorld()->GetPlayerControllerIterator()->Get(1)->Possess(m_P2Fighter);
 	////m_P2Fighter->InitializeController();
 
@@ -43,4 +45,31 @@ void ABeatEmTestArea::BeginPlay()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Super::BeginPlay();
+}
+
+void ABeatEmTestArea::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	double dist = FVector::Dist(Fighter->GetActorLocation(), Fighter2->GetActorLocation());
+
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::SanitizeFloat(dist));
+
+	if(dist >= 100)
+	{
+		FVector dir = Fighter->GetActorLocation() - Fighter2->GetActorLocation();
+
+		dir.Normalize();
+
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnMoveInput().X));
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnMoveInput().Y));
+		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnCapsuleMesh()->GetPhysicsLinearVelocity().Y));
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(dir.X));
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(dir.Y));
+
+		Fighter2->SetMoveDirection(dir);
+	}
+	else
+		Fighter2->SetMoveDirection(FVector::Zero());
+
 }
