@@ -514,6 +514,38 @@ public:
 	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
 };
 
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UBlockState : public UBaseState
+{
+	GENERATED_BODY()
+	
+	public:
+	
+		virtual void Enter(ABaseFighter& fighter) override;
+		virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+		virtual void Update(ABaseFighter& fighter) override;
+		virtual void Exit(ABaseFighter& fighter) override;
+
+		int BlockTime;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UParryState : public UBaseState/*, public UAttackState*/
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+	float MinParryTime = 12;
+	float MaxParryTime = 45;
+	float CurrentParryTimer;
+};
+
 //UCLASS(Blueprintable, BlueprintType)
 //class BEATEMUP_API UAirComboAttackState : public UAirAttackState
 //{

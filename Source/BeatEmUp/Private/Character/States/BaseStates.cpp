@@ -624,3 +624,64 @@ void UCustomState::StateExit_Implementation(ABaseFighter* fighter)
 {
 
 }
+
+void UBlockState::Enter(ABaseFighter& fighter)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering block state"));
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.BlockAnim, 1);
+
+	BlockTime = 0;
+}
+
+UBaseState* UBlockState::HandleInput(ABaseFighter& fighter)
+{
+	for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	{
+		if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+		{
+			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime <= 0)
+			{
+				if(BlockTime <= 3)
+					return NewObject<UParryState>();
+
+				return NewObject<UGroundedState>();
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+void UBlockState::Update(ABaseFighter& fighter)
+{
+	BlockTime += 1;
+}
+
+void UBlockState::Exit(ABaseFighter& fighter)
+{
+}
+
+void UParryState::Enter(ABaseFighter& fighter)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering parry state"));
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.ParryAnim, 1);
+
+	CurrentParryTimer = 0;
+}
+
+UBaseState* UParryState::HandleInput(ABaseFighter& fighter)
+{
+	if (CurrentParryTimer >= MaxParryTime)
+		return NewObject<UGroundedState>();
+
+	return nullptr;
+}
+
+void UParryState::Update(ABaseFighter& fighter)
+{
+	CurrentParryTimer += 1;
+}
+
+void UParryState::Exit(ABaseFighter& fighter)
+{
+}

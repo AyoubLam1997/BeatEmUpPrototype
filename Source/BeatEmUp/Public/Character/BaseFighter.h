@@ -123,6 +123,10 @@ public:
 	UAnimSequence* StandingUpAnim;
 	UPROPERTY(EditAnywhere, Category = "Default animations")
 	UAnimSequence* JumpAnim;
+	UPROPERTY(EditAnywhere, Category = "Default animations")
+	UAnimSequence* BlockAnim;
+	UPROPERTY(EditAnywhere, Category = "Default animations")
+	UAnimSequence* ParryAnim;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")
 	UInputMappingContext* MappingContext;

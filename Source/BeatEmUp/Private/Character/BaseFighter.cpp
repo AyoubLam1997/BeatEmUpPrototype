@@ -5,6 +5,7 @@
 #include <EnhancedInputSubsystems.h>
 #include <EnhancedInputComponent.h>
 #include <Kismet/GameplayStatics.h>
+#include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
 ABaseFighter::ABaseFighter()
@@ -233,9 +234,11 @@ void ABaseFighter::Walk()
 
 		if (MoveDirection.Length() != 0)
 		{
+			FRotator rot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), GetActorLocation() + CapsuleMesh->GetPhysicsLinearVelocity());
+
 			FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
 
-			SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
+			SkeletalMesh->SetWorldRotation(FRotator(0, rot.Yaw - 90, 0));
 		}
 
 		return;
