@@ -29,7 +29,8 @@ enum class EInputType
 	HeavyPunch,
 	LightKick,
 	MediumKick,
-	HeavyKick
+	HeavyKick,
+	Block
 };
 
 FString InputToString(EInputType type);

@@ -518,15 +518,27 @@ UCLASS(Blueprintable, BlueprintType)
 class BEATEMUP_API UBlockState : public UBaseState
 {
 	GENERATED_BODY()
-	
-	public:
-	
-		virtual void Enter(ABaseFighter& fighter) override;
-		virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
-		virtual void Update(ABaseFighter& fighter) override;
-		virtual void Exit(ABaseFighter& fighter) override;
 
-		int BlockTime;
+public:
+
+	virtual void Enter(ABaseFighter& fighter) override;
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+	virtual void Update(ABaseFighter& fighter) override;
+	virtual void Exit(ABaseFighter& fighter) override;
+
+	int BlockTime;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class BEATEMUP_API UBlockingState : public UBlockState
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual UBaseState* HandleInput(ABaseFighter& fighter) override;
+
+	int MinBlockTime = 30;
 };
 
 UCLASS(Blueprintable, BlueprintType)

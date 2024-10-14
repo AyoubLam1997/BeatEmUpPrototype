@@ -113,6 +113,14 @@ void ABaseFighter::Tick(float DeltaTime)
 	else if (SlowMotionTime <= 0.f && SlowMotion == 1)
 		SetPhysicsNormal();
 
+	if (ControlState == EControlState::Player)
+	{
+		FighterComboTimer -= DeltaTime;
+
+		if (FighterComboTimer <= 0)
+			FighterCombo = 0;
+	}
+
 	/*if (ControlState == EControlState::AI)
 	{
 		for (int i = 0; i < BufferHandler->m_InputBufferItems.Num(); i++)
@@ -267,7 +275,6 @@ void ABaseFighter::Walk()
 
 	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
 	AddMovementInput(rightDir, MoveDirection.X);*/
-
 }
 
 void ABaseFighter::RotateToInputDirection()
@@ -278,6 +285,12 @@ void ABaseFighter::RotateToInputDirection()
 
 		SkeletalMesh->SetWorldRotation(dir + FVector(0, 0, 0).Rotation());
 	}
+}
+
+void ABaseFighter::AddToCombo()
+{
+	FighterCombo += 1;
+	FighterComboTimer = 500.f;
 }
 
 void ABaseFighter::ChangeState(UBaseState* newState)
@@ -308,6 +321,16 @@ UBaseState* ABaseFighter::ReturnAttackState()
 		return DuplicateObject(MediumAttack.GetDefaultObject(), nullptr);
 	if (InputCheck(EInputType::HeavyPunch))
 		return NewObject<UJumpState>();
+	for (int i = 0; i < ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	{
+		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+		{
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::Block && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				return NewObject<UBlockState>();
+			}
+		}
+	}
 
 	/*if (InputCheck(EInputType::HeavyPunch))
 		return NewObject<UJumpState>();*/
@@ -321,24 +344,24 @@ bool ABaseFighter::InputCheck(EInputType input)
 	{
 		if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
 		{
-			for (int j = 0; j < 6; j++)
+			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input)
 			{
-				if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input && ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].HoldTime > 0)
+				for (int j = 0; j < ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num(); j++)
 				{
 					if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].CanExecute())
 					{
-						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Button pressed"));
 						ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].SetUsedTrue();
+
+						int value = ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].HoldTime;
+
+						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state in buffer ") + InputToString(input) + ": Index " + FString::FromInt(j));
+
 						return 1;
 					}
-					else if (!ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].CanExecute())
-					{
-						return 0;
-					}
 				}
-				else
-					continue;
 			}
+			else
+				continue;
 		}
 	}
 
@@ -379,15 +402,27 @@ UBaseState* ABaseFighter::CancelToState(EInputType input, TSubclassOf<UBaseState
 
 void ABaseFighter::SetPhysicsSlowMotion()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Setting global slow motion"));
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), .1f);
 
-	SlowMotionTime = 12.f;
+	SlowMotionTime = 15.f;
+	SlowMotion = 1;
+}
+
+void ABaseFighter::SetLocalSlowMotion()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Setting local slow motion"));
+	CustomTimeDilation = .05f;
+
+	SlowMotionTime = 30.f;
 	SlowMotion = 1;
 }
 
 void ABaseFighter::SetPhysicsNormal()
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+	CustomTimeDilation = 1.f;
+
 	SlowMotion = 0;
 	SlowMotionTime = 0.f;
 }
@@ -399,11 +434,31 @@ void ABaseFighter::ChangeToGroundedState()
 
 void ABaseFighter::ChangeToStunState()
 {
+	if(UBlockState* block = Cast<UBlockState>(State))
+	{
+		if(block->BlockTime <= 3)
+			ChangeState(NewObject<UParryState>());
+		else
+			ChangeState(NewObject<UBlockingState>());
+
+		return;
+	}
+
 	ChangeState(NewObject<UStunState>());
 }
 
 void ABaseFighter::ChangeToStunStateKnock(FVector dir)
 {
+	if (UBlockState* block = Cast<UBlockState>(State))
+	{
+		if (block->BlockTime <= 3)
+			ChangeState(NewObject<UParryState>());
+		else
+			ChangeState(NewObject<UBlockingState>());
+
+		return;
+	}
+
 	UKnockbackStunState* state = NewObject<UKnockbackStunState>();
 
 	state->Init(dir, 60);
@@ -413,6 +468,16 @@ void ABaseFighter::ChangeToStunStateKnock(FVector dir)
 
 void ABaseFighter::ChangeToStunStateAir(FVector dir)
 {
+	if (UBlockState* block = Cast<UBlockState>(State))
+	{
+		if (block->BlockTime <= 3)
+			ChangeState(NewObject<UParryState>());
+		else
+			ChangeState(NewObject<UBlockingState>());
+
+		return;
+	}
+
 	UAirStunState* state = NewObject<UAirStunState>();
 
 	state->Init(dir, 60);
@@ -430,10 +495,13 @@ InputBuffer* ABaseFighter::ReturnInputBuffer()
 	return BufferHandler;
 }
 
-const bool ABaseFighter::HasHitEnemy() const
+const bool ABaseFighter::HasHitEnemy()
 {
 	if (HBHandler->ReturnCollidedActors().Num() > 0)
+	{
+
 		return 1;
+	}
 
 	return 0;
 }
@@ -456,6 +524,16 @@ USkeletalMeshComponent* ABaseFighter::ReturnSkeletalMesh() const
 UHitbox* ABaseFighter::ReturnHitbox() const
 {
 	return Hitbox;
+}
+
+const bool ABaseFighter::IsBlocking()
+{
+	if (UBlockState* block = Cast<UBlockState>(State))
+		return 1;
+	if (UParryState* parry = Cast<UParryState>(State))
+		return 1;
+
+	return 0;
 }
 
 void ABaseFighter::InitializeAIControllerBlueprint_Implementation()

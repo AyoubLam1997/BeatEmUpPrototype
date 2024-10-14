@@ -26,6 +26,18 @@ UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 	if (fighter.InputCheck(EInputType::HeavyPunch))
 		return NewObject<UJumpState>();
 
+	for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+	{
+		if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+		{
+			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::Block && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+			{
+				return NewObject<UBlockState>();
+			}
+		}
+	}
+
+
 	return nullptr;
 }
 
@@ -178,6 +190,8 @@ void UStunState::Enter(ABaseFighter& fighter)
 		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.FallBlendAnim, 0);
 	else
 		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.StunnedAnim, 0);
+
+	fighter.FighterCombo = 0;
 }
 
 UBaseState* UStunState::HandleInput(ABaseFighter& fighter)
@@ -243,6 +257,8 @@ void UKnockbackStunState::Enter(ABaseFighter& fighter)
 	}
 	else
 		fighter.ReturnCapsuleMesh()->AddImpulse(Direction * 5);
+
+	fighter.FighterCombo = 0;
 }
 
 UBaseState* UKnockbackStunState::HandleInput(ABaseFighter& fighter)
@@ -304,6 +320,8 @@ void UAirStunState::Enter(ABaseFighter& fighter)
 	fighter.ReturnCapsuleMesh()->AddImpulse(Direction * 5);
 
 	CurrentStunTime = 0;
+
+	fighter.FighterCombo = 0;
 }
 
 UBaseState* UAirStunState::HandleInput(ABaseFighter& fighter)
@@ -628,7 +646,9 @@ void UCustomState::StateExit_Implementation(ABaseFighter* fighter)
 void UBlockState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering block state"));
-	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.BlockAnim, 1);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.BlockAnim, 0);
+
+	fighter.ReturnSkeletalMesh()->SetPosition(1);
 
 	BlockTime = 0;
 }
@@ -639,10 +659,10 @@ UBaseState* UBlockState::HandleInput(ABaseFighter& fighter)
 	{
 		if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
 		{
-			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime <= 0)
+			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::Block && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime <= 0)
 			{
-				if(BlockTime <= 3)
-					return NewObject<UParryState>();
+				/*if(BlockTime <= 3)
+					return NewObject<UParryState>();*/
 
 				return NewObject<UGroundedState>();
 			}
@@ -661,16 +681,49 @@ void UBlockState::Exit(ABaseFighter& fighter)
 {
 }
 
+UBaseState* UBlockingState::HandleInput(ABaseFighter& fighter)
+{
+	if(BlockTime >= MinBlockTime)
+	{
+		for (int i = 0; i < fighter.ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+		{
+			if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+			{
+				if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::Block && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime <= 0)
+				{
+					/*if(BlockTime <= 3)
+						return NewObject<UParryState>();*/
+
+					return NewObject<UGroundedState>();
+				}
+				else if (fighter.ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::Block && fighter.ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[0].HoldTime > 0)
+				{
+					return NewObject<UBlockState>();
+				}
+			}
+		}
+
+		fighter.ReturnAttackState();
+	}
+
+	return nullptr;
+}
+
 void UParryState::Enter(ABaseFighter& fighter)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering parry state"));
-	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.ParryAnim, 1);
+	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.ParryAnim, 0);
 
 	CurrentParryTimer = 0;
 }
 
 UBaseState* UParryState::HandleInput(ABaseFighter& fighter)
 {
+	if (fighter.InputCheck(EInputType::LightPunch))
+		return DuplicateObject(fighter.LightAttack.GetDefaultObject(), nullptr);
+	if (fighter.InputCheck(EInputType::MediumPunch))
+		return DuplicateObject(fighter.MediumAttack.GetDefaultObject(), nullptr);
+
 	if (CurrentParryTimer >= MaxParryTime)
 		return NewObject<UGroundedState>();
 

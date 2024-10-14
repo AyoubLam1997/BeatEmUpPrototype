@@ -87,10 +87,16 @@ public:
 	void ChangeToStunStateAir(FVector dir);
 
 	UFUNCTION(BlueprintCallable)
+	void SetLocalSlowMotion();
+
+	UFUNCTION(BlueprintCallable)
 	const bool IsGrounded();
 
 	UFUNCTION(BlueprintCallable)
-	const bool HasHitEnemy() const;
+	const bool IsBlocking();
+
+	UFUNCTION(BlueprintCallable)
+	const bool HasHitEnemy();
 
 	/*UFUNCTION(BlueprintCallable)
 	BaseState* GetCurrentState() { return nullptr; };*/
@@ -144,6 +150,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> Dash;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int FighterCombo;
+
+	int FighterComboTimer = 0;
+
 	/*UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> CustomState;*/
 
@@ -157,6 +168,9 @@ public:
 
 	/*UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);*/
+
+	UFUNCTION(BlueprintCallable)
+	void AddToCombo();
 
 	UFUNCTION(BlueprintCallable)
 	void SetPhysicsSlowMotion();

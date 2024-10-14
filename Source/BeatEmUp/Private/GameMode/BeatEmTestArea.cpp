@@ -5,6 +5,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
+#include <Kismet/GameplayStatics.h>
 
 void ABeatEmTestArea::BeginPlay()
 {
@@ -49,6 +50,12 @@ void ABeatEmTestArea::BeginPlay()
 
 void ABeatEmTestArea::Tick(float DeltaTime)
 {
+	if(UGameplayStatics::GetGlobalTimeDilation(GetWorld()) < 1.f)
+	{
+		Fighter->CustomTimeDilation = 1.f;
+		Fighter2->CustomTimeDilation = 1.f;
+	}
+
 	Super::Tick(DeltaTime);
 
 	double dist = FVector::Dist(Fighter->GetActorLocation(), Fighter2->GetActorLocation());

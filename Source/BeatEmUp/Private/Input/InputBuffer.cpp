@@ -40,6 +40,8 @@ FString InputToString(EInputType type)
         return "MediumKick";
     case EInputType::HeavyKick:
         return "HeavyKick";
+    case EInputType::Block:
+        return "Block";
     default:
         return "None";
     }
@@ -81,6 +83,8 @@ EInputType InputFromString(FString string)
         return EInputType::MediumKick;
     if (string == "HeavyKick")
         return EInputType::HeavyKick;
+    if (string == "Block")
+        return EInputType::Block;
 
     return EInputType::None;
 }
