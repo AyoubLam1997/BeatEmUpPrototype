@@ -62,37 +62,40 @@ void ABeatEmTestArea::Tick(float DeltaTime)
 
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::SanitizeFloat(dist));
 
-	if(dist >= 100)
+	if (!Fighter2->IsDead())
 	{
-		FVector dir = Fighter->GetActorLocation() - Fighter2->GetActorLocation();
-
-		dir.Normalize();
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnMoveInput().X));
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnMoveInput().Y));
-		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnCapsuleMesh()->GetPhysicsLinearVelocity().Y));
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(dir.X));
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(dir.Y));
-
-		Fighter2->SetMoveDirection(dir);
-	}
-	else
-	{
-		Fighter2->SetMoveDirection(FVector::Zero());
-
-		for (int i = 0; i < Fighter2->ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
+		if (dist >= 100)
 		{
-			if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
+			FVector dir = Fighter->GetActorLocation() - Fighter2->GetActorLocation();
+
+			dir.Normalize();
+
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnMoveInput().X));
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnMoveInput().Y));
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::SanitizeFloat(Fighter->ReturnCapsuleMesh()->GetPhysicsLinearVelocity().Y));
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(dir.X));
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Red, FString::SanitizeFloat(dir.Y));
+
+			Fighter2->SetMoveDirection(dir);
+		}
+		else
+		{
+			Fighter2->SetMoveDirection(FVector::Zero());
+
+			for (int i = 0; i < Fighter2->ReturnInputBuffer()->m_InputBufferItems.Num(); i++)
 			{
-				if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch)
+				if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num() > 0)
 				{
-					if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->m_InputActionPressed == 0)
+					if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == EInputType::LightPunch)
 					{
-						Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->SetInputActionPressed(1);
-					}
-					else if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->m_InputActionPressed == 1)
-					{
-						Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->SetInputActionPressed(0);
+						if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->m_InputActionPressed == 0)
+						{
+							Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->SetInputActionPressed(1);
+						}
+						else if (Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->m_InputActionPressed == 1)
+						{
+							Fighter2->ReturnInputBuffer()->m_InputBufferItems[i]->SetInputActionPressed(0);
+						}
 					}
 				}
 			}

@@ -416,6 +416,15 @@ public:
 	FStatesToTransitionButton StateToTransitionTo;
 };
 
+UENUM(BlueprintType)
+enum class EAttackType
+{
+	Punch = 0,
+	Kick,
+	Grab,
+	Projectile
+};
+
 UCLASS(Blueprintable, BlueprintType)
 class BEATEMUP_API UAttackState : public UBaseState/*, public UAttackState*/
 {
@@ -439,6 +448,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void StateExit(ABaseFighter* fighter);
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte <EAttackType> AttackTime;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Damage;

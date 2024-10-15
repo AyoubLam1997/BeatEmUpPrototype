@@ -37,6 +37,8 @@ UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 		}
 	}
 
+	if(fighter.IsDead())
+		return NewObject<ULayingState>();
 
 	return nullptr;
 }
@@ -60,7 +62,7 @@ void ULayingState::Enter(ABaseFighter& fighter)
 
 UBaseState* ULayingState::HandleInput(ABaseFighter& fighter)
 {
-	if (LayingTimer >= 60)
+	if (LayingTimer >= 60 && !fighter.IsDead())
 		return NewObject<UStandingUpState>();
 
 	return nullptr;
@@ -68,6 +70,9 @@ UBaseState* ULayingState::HandleInput(ABaseFighter& fighter)
 
 void ULayingState::Update(ABaseFighter& fighter)
 {
+	if (fighter.IsDead())
+		return;
+
 	LayingTimer += 1;
 }
 

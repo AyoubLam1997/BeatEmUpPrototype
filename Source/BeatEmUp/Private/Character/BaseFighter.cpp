@@ -52,6 +52,10 @@ void ABaseFighter::BeginPlay()
 
 	MovementPawn = FindComponentByClass<UFloatingPawnMovement>();
 
+	CurrentHealth = MaxHealth;
+
+	LockToTarget = 0;
+
 	//InitializeController();
 
 	//FighterMesh->OnComponentHit.AddDynamic(this, &ABaseFighter::OnHit);
@@ -263,7 +267,7 @@ void ABaseFighter::Walk()
 	FVector rightDir = FRotationMatrix(yaw).GetUnitAxis(EAxis::Y);
 	AddMovementInput(FVector(0, .75f, 0), MoveDirection.X);
 
-	if (MoveDirection.Length() != 0)
+	if (MoveDirection.Length() != 0 && LockToTarget == 0)
 	{
 		FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
 
@@ -279,7 +283,7 @@ void ABaseFighter::Walk()
 
 void ABaseFighter::RotateToInputDirection()
 {
-	if (MoveDirection.Length() != 0)
+	if (MoveDirection.Length() != 0 && LockToTarget == 0)
 	{
 		FRotator dir = (GetActorLocation() - (GetActorLocation() + FVector(-MoveDirection.X, MoveDirection.Y, 0))).Rotation();
 
@@ -534,6 +538,24 @@ const bool ABaseFighter::IsBlocking()
 		return 1;
 
 	return 0;
+}
+
+void ABaseFighter::RemoveHealth(float value)
+{
+	if (value <= 0)
+		return;
+
+	CurrentHealth -= value;
+}
+
+const bool ABaseFighter::IsDead() const
+{
+	return CurrentHealth <= 0 ? 1 : 0;
+}
+
+void ABaseFighter::SetLookAtRotation(FVector look)
+{
+	LocToRotateTowards = look;
 }
 
 void ABaseFighter::InitializeAIControllerBlueprint_Implementation()

@@ -40,8 +40,16 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float WalkSpeed;
 
+	UPROPERTY(EditAnywhere)
+	float MaxHealth;
+
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentHealth;
+
+	UPROPERTY(EditAnywhere)
+	bool LockToTarget;
+
+	FVector LocToRotateTowards;
 
 	InputBuffer* BufferHandler;
 
@@ -97,6 +105,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	const bool HasHitEnemy();
+
+	UFUNCTION(BlueprintCallable)
+	const bool IsDead() const;
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveHealth(float value);
+
+	void SetLookAtRotation(FVector look);
 
 	/*UFUNCTION(BlueprintCallable)
 	BaseState* GetCurrentState() { return nullptr; };*/
