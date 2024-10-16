@@ -416,7 +416,7 @@ public:
 	FStatesToTransitionButton StateToTransitionTo;
 };
 
-UENUM(BlueprintType)
+UENUM(Blueprintable, BlueprintType)
 enum class EAttackType
 {
 	Punch = 0,

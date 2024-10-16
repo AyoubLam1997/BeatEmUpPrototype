@@ -174,17 +174,25 @@ void InputBuffer::BufferUpdate()
             if (bufferItem->m_Buffer.Num() > 1)
             {
                 for (int i = bufferItem->m_Buffer.Num() - 1; i > 0; i--)
+                //for(int i = 0; i < bufferItem->m_Buffer.Num() - 1; i++)
                 {
                     // Moves the buffer data higher
                     bufferItem->SetHoldUsed(i, bufferItem->m_Buffer[i - 1].HoldTime, bufferItem->m_Buffer[i - 1].IsUsed, bufferItem->m_Buffer[i - 1].MotionUsed);
+
+                    if(bufferItem->m_Buffer[i].HoldTime == 1 && bufferItem->m_Buffer[i].IsUsed)
+                    {
+                        GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::FromInt(i));
+                    }
+                    /*else if(bufferItem->m_Buffer[i].HoldTime != 1 && bufferItem->m_Buffer[i].IsUsed)
+                        GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Purple, FString::FromInt(i));*/
                 }
             }
 
-           /* if (bufferItem->InputDirection == EInputType::LightPunch)
+            if (bufferItem->InputDirection == EInputType::LightPunch)
             {
-                GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::FromInt(bufferItem->m_Buffer[0].HoldTime));
-                GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::FromInt(bufferItem->m_Buffer[0].IsUsed));
-            }*/
+                //GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::FromInt(bufferItem->m_Buffer[0].HoldTime));
+                //GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::FromInt(bufferItem->m_Buffer[0].IsUsed));
+            }
         }
     }
 }
@@ -230,7 +238,7 @@ void InputBuffer::UpdateMotion(bool right)
 
                     if (m_MotionInputs[i]->InputCheck(direction))
                     {
-                        m_InputBufferItems[j]->m_Buffer[1].SetMotionTrue();
+                        m_InputBufferItems[j]->m_Buffer[0].SetMotionTrue();
                     }
                 }
             }
@@ -294,7 +302,7 @@ void InputStateItem::SetHoldUsed(int time, bool used, bool motion)
 
 bool InputStateItem::CanExecute()
 {
-    if (HoldTime == 1 && !IsUsed)
+    if (HoldTime == 1 && IsUsed == 0)
     {
         return true;
     }

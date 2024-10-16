@@ -19,9 +19,12 @@
 #include "Collision/Hitbox.h"
 #include "Collision/HitboxHandler.h"
 
+#include "Combat/ComboManager.h"
+
 #include <GameFramework/FloatingPawnMovement.h>
 
 #include "BaseFighter.generated.h"
+
 
 UENUM(Blueprintable)
 enum class EControlState
@@ -46,11 +49,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentHealth;
 
-	UPROPERTY(EditAnywhere)
-	bool LockToTarget;
-
-	FVector LocToRotateTowards;
-
 	InputBuffer* BufferHandler;
 
 	UPROPERTY()
@@ -61,6 +59,11 @@ protected:
 public:
 	// Sets default values for this pawn's properties
 	ABaseFighter();
+
+	UPROPERTY(EditAnywhere)
+	bool LockToTarget;
+
+	FVector LocToRotateTowards;
 
 	UFUNCTION(BlueprintCallable)
 	void InitializeController();
@@ -114,8 +117,17 @@ public:
 
 	void SetLookAtRotation(FVector look);
 
-	/*UFUNCTION(BlueprintCallable)
-	BaseState* GetCurrentState() { return nullptr; };*/
+	UFUNCTION(BlueprintCallable)
+	const float AddToCombo(float damage, TEnumAsByte<EAttackType> type);
+
+	UFUNCTION(BlueprintCallable)
+	const int ReturnCurrentCombo();
+
+	UFUNCTION(BlueprintCallable)
+	UBaseState* GetCurrentState();
+
+	UFUNCTION(BlueprintCallable)
+	UAttackState* GetAttackState();
 
 	InputBuffer* ReturnInputBuffer();
 
@@ -154,6 +166,8 @@ public:
 	UInputMappingContext* MappingContext;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")
 	UInputAction* MovementInput;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")
+	UInputAction* LockInput;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAttackState> LightAttack;
@@ -166,15 +180,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> Dash;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int FighterCombo;
-
-	int FighterComboTimer = 0;
-
 	/*UPROPERTY(EditAnywhere)
 	TSubclassOf<UBaseState> CustomState;*/
 
 	UFloatingPawnMovement* MovementPawn;
+
+	ComboManager ComboManagerHandler;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -185,8 +196,8 @@ public:
 	/*UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);*/
 
-	UFUNCTION(BlueprintCallable)
-	void AddToCombo();
+	/*UFUNCTION(BlueprintCallable)
+	void AddToCombo();*/
 
 	UFUNCTION(BlueprintCallable)
 	void SetPhysicsSlowMotion();
@@ -211,6 +222,8 @@ public:
 	UHitbox* ReturnHitbox() const;
 
 	void SetMoveDirection(FVector dir);
+
+	void SetLockMode(const FInputActionValue& value);
 
 	TEnumAsByte <EControlState> ControlState = EControlState::Player;
 

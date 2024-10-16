@@ -119,10 +119,7 @@ void ABaseFighter::Tick(float DeltaTime)
 
 	if (ControlState == EControlState::Player)
 	{
-		FighterComboTimer -= DeltaTime;
-
-		if (FighterComboTimer <= 0)
-			FighterCombo = 0;
+		ComboManagerHandler.CountTimer(DeltaTime);
 	}
 
 	/*if (ControlState == EControlState::AI)
@@ -213,6 +210,10 @@ void ABaseFighter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 			EnhancedInput->BindAction(MappingContext->GetMappings()[i].Action, ETriggerEvent::Completed, this, &ABaseFighter::ButtonPressed, BufferHandler->m_InputBufferItems.Num() - 1);
 		}
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::FromInt(BufferHandler->m_InputBufferItems.Num()));
+
+	EnhancedInput->BindAction(LockInput, ETriggerEvent::Started, this, &ABaseFighter::SetLockMode);
 }
 
 void ABaseFighter::ButtonPressed(const FInputActionValue& value, const int index)
@@ -220,6 +221,11 @@ void ABaseFighter::ButtonPressed(const FInputActionValue& value, const int index
 	const bool pressed = value.Get<bool>();
 
 	BufferHandler->m_InputBufferItems[index]->SetInputActionPressed(pressed);
+}
+
+void ABaseFighter::SetLockMode(const FInputActionValue& value)
+{
+	LockToTarget = !LockToTarget;
 }
 
 void ABaseFighter::SetMoveDirection(const FInputActionValue& value)
@@ -256,6 +262,14 @@ void ABaseFighter::Walk()
 		return;
 	}
 
+	if(LockToTarget)
+	{
+		FRotator rot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), GetActorLocation() + LocToRotateTowards);
+
+		FRotator dir = (GetActorLocation() - ( FVector(-LocToRotateTowards.X, LocToRotateTowards.Y, LocToRotateTowards.Z))).Rotation();
+
+		SkeletalMesh->SetWorldRotation(FRotator(0, rot.Yaw - 90, 0));
+	}
 
 	FRotator rot = GetActorRotation();
 
@@ -291,10 +305,14 @@ void ABaseFighter::RotateToInputDirection()
 	}
 }
 
-void ABaseFighter::AddToCombo()
+const float ABaseFighter::AddToCombo(float damage, TEnumAsByte<EAttackType> type)
 {
-	FighterCombo += 1;
-	FighterComboTimer = 500.f;
+	return ComboManagerHandler.AddToComboAndReturnDamage(damage, type);
+}
+
+const int ABaseFighter::ReturnCurrentCombo()
+{
+	return ComboManagerHandler.ReturnCombo();
 }
 
 void ABaseFighter::ChangeState(UBaseState* newState)
@@ -350,14 +368,15 @@ bool ABaseFighter::InputCheck(EInputType input)
 		{
 			if (ReturnInputBuffer()->m_InputBufferItems[i]->InputDirection == input)
 			{
-				for (int j = 0; j < ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num(); j++)
+				//DEV NOTE: 0 is the unnused state for the buffer. Start with 1 for input buffer check
+				for (int j = 1; j < ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer.Num(); j++)
 				{
 					if (ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].CanExecute())
 					{
 						ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].SetUsedTrue();
 
-						int value = ReturnInputBuffer()->m_InputBufferItems[i]->m_Buffer[j].HoldTime;
-
+						// For debugging purposes
+						int value = BufferHandler->m_InputBufferItems[i]->m_Buffer[j].HoldTime;
 						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state in buffer ") + InputToString(input) + ": Index " + FString::FromInt(j));
 
 						return 1;
@@ -556,6 +575,19 @@ const bool ABaseFighter::IsDead() const
 void ABaseFighter::SetLookAtRotation(FVector look)
 {
 	LocToRotateTowards = look;
+}
+
+UBaseState* ABaseFighter::GetCurrentState()
+{
+	return State;
+}
+
+UAttackState* ABaseFighter::GetAttackState()
+{
+	if (UAttackState* attack = Cast<UAttackState>(State))
+		return attack;
+
+	return nullptr;
 }
 
 void ABaseFighter::InitializeAIControllerBlueprint_Implementation()

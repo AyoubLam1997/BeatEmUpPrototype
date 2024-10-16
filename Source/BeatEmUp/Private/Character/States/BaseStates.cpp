@@ -10,12 +10,15 @@
 
 void UGroundedState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering default state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering default state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.IdleAnim, 1);
 }
 
 UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 {
+	if (fighter.IsDead())
+		return NewObject<ULayingState>();
+
 	if (fighter.ReturnMoveInput().Length() > 0)
 		return NewObject<UWalkState>();
 
@@ -37,9 +40,6 @@ UBaseState* UGroundedState::HandleInput(ABaseFighter& fighter)
 		}
 	}
 
-	if(fighter.IsDead())
-		return NewObject<ULayingState>();
-
 	return nullptr;
 }
 
@@ -54,7 +54,7 @@ void UGroundedState::Exit(ABaseFighter& fighter)
 
 void ULayingState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.LayingAnim, 0);
 
 	LayingTimer = 0;
@@ -82,7 +82,7 @@ void ULayingState::Exit(ABaseFighter& fighter)
 
 void UStandingUpState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering standing up state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.StandingUpAnim, 0);
 }
 
@@ -105,12 +105,15 @@ void UStandingUpState::Exit(ABaseFighter& fighter)
 
 void UWalkState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering walk state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering walk state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.WalkAnim, 1);
 }
 
 UBaseState* UWalkState::HandleInput(ABaseFighter& fighter)
 {
+	if (fighter.IsDead())
+		return NewObject<ULayingState>();
+
 	if (fighter.ReturnMoveInput().Length() <= 0)
 		return NewObject <UGroundedState>();
 
@@ -128,7 +131,7 @@ void UWalkState::Exit(ABaseFighter& fighter)
 
 void UAirState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.JumpAnim, 0);
 }
 
@@ -154,7 +157,7 @@ void UAirState::Exit(ABaseFighter& fighter)
 
 void UJumpState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering jump state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering jump state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.JumpAnim, 0);
 
 	fighter.ReturnCapsuleMesh()->AddImpulse(FVector(0, 0, 25000));
@@ -172,7 +175,7 @@ void UJumpState::Update(ABaseFighter& fighter)
 
 void UJumpState::Exit(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("exiting jump state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("exiting jump state"));
 }
 
 UStunState::UStunState()
@@ -187,7 +190,7 @@ UStunState::UStunState(int stun)
 
 void UStunState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering stun state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering stun state"));
 
 	CurrentStunTime = 0;
 
@@ -196,7 +199,7 @@ void UStunState::Enter(ABaseFighter& fighter)
 	else
 		fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.StunnedAnim, 0);
 
-	fighter.FighterCombo = 0;
+	fighter.ComboManagerHandler.ClearCombo();
 }
 
 UBaseState* UStunState::HandleInput(ABaseFighter& fighter)
@@ -247,7 +250,7 @@ void UKnockbackStunState::Init(FVector dir, int duration)
 
 void UKnockbackStunState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering stun state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering stun state"));
 
 	CurrentStunTime = 0;
 
@@ -263,7 +266,7 @@ void UKnockbackStunState::Enter(ABaseFighter& fighter)
 	else
 		fighter.ReturnCapsuleMesh()->AddImpulse(Direction * 5);
 
-	fighter.FighterCombo = 0;
+	fighter.ComboManagerHandler.ClearCombo();
 }
 
 UBaseState* UKnockbackStunState::HandleInput(ABaseFighter& fighter)
@@ -316,7 +319,7 @@ UAirStunState::UAirStunState() : UKnockbackStunState()
 
 void UAirStunState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air stun state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering air stun state"));
 
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.FallBlendAnim, 1);
 	FVector BlendParams(0, fighter.GetVelocity().Z, 0);
@@ -326,7 +329,7 @@ void UAirStunState::Enter(ABaseFighter& fighter)
 
 	CurrentStunTime = 0;
 
-	fighter.FighterCombo = 0;
+	fighter.ComboManagerHandler.ClearCombo();
 }
 
 UBaseState* UAirStunState::HandleInput(ABaseFighter& fighter)
@@ -351,7 +354,7 @@ void UAirStunState::Exit(ABaseFighter& fighter)
 
 void UAttackState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state"));
 
 	fighter.ReturnSkeletalMesh()->PlayAnimation(AnimationSequence, 0);
 
@@ -385,7 +388,7 @@ void UAttackState::Update(ABaseFighter& fighter)
 
 	FString frameText = FString::FromInt(CurrentFrame);
 
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
+	////GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
 
 	if (CurrentFrame == MinFrame)
 		fighter.ReturnHitbox()->OpenColliderState();
@@ -404,7 +407,7 @@ void UAttackState::Exit(ABaseFighter& fighter)
 	fighter.ReturnHitbox()->ClearCollidedObjects();
 	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
 }
 
 void UAirAttackState::Enter(ABaseFighter& fighter)
@@ -446,7 +449,7 @@ void UAirAttackState::Exit(ABaseFighter& fighter)
 
 //void UAirAttackState::Enter(ABaseFighter& fighter)
 //{
-//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state"));
+//	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering attack state"));
 //
 //	fighter.SkeletalMesh->PlayAnimation(m_AnimationSequence, 0);
 //
@@ -480,7 +483,7 @@ void UAirAttackState::Exit(ABaseFighter& fighter)
 //
 //	FString frameText = FString::FromInt(m_CurrentFrame);
 //
-//	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
+//	////GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Frame: ") + frameText);
 //
 //	if (m_CurrentFrame == m_MinFrame)
 //		fighter.ReturnHitbox()->OpenColliderState();
@@ -499,7 +502,7 @@ void UAirAttackState::Exit(ABaseFighter& fighter)
 //	fighter.ReturnHitbox()->ClearCollidedObjects();
 //	fighter.ReturnHitboxHandler()->ClearCollidedObjects();
 //
-//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
+//	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Exiting attack state"));
 //}
 
 void UAttackState::StateEnter_Implementation(ABaseFighter* fighter)
@@ -650,7 +653,7 @@ void UCustomState::StateExit_Implementation(ABaseFighter* fighter)
 
 void UBlockState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering block state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering block state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.BlockAnim, 0);
 
 	fighter.ReturnSkeletalMesh()->SetPosition(1);
@@ -716,7 +719,7 @@ UBaseState* UBlockingState::HandleInput(ABaseFighter& fighter)
 
 void UParryState::Enter(ABaseFighter& fighter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering parry state"));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Entering parry state"));
 	fighter.ReturnSkeletalMesh()->PlayAnimation(fighter.ParryAnim, 0);
 
 	CurrentParryTimer = 0;
